@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, ShieldCheck, AlertCircle, ArrowRight, CheckCircle2, LogIn } from 'lucide-react';
+import { X, ShieldCheck, AlertCircle, ArrowRight } from 'lucide-react';
 import { signInWithGoogle, isThaparEmail, isSupabaseConfigured } from '../../lib/supabase';
 
 export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
   const { handleLogin, allStudents, addToast } = useApp();
-  const [googleEmail, setGoogleEmail] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSigningIn, setIsSigningIn] = useState(false);
 
@@ -21,34 +20,8 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
         setErrorMsg(error.message || 'Google OAuth Sign-In failed.');
       }
     } else {
-      // Prompt user to select/type their @thapar.edu email
-      setErrorMsg('Please enter your @thapar.edu Google email address below or select a student account.');
+      setErrorMsg('Please select a verified student account below to sign in.');
     }
-  };
-
-  const handleGoogleSubmit = (e) => {
-    e.preventDefault();
-    const email = googleEmail.trim().toLowerCase();
-
-    if (!isThaparEmail(email)) {
-      setErrorMsg('Access Denied: Only @thapar.edu Google email accounts are permitted on notOLX.');
-      addToast('Access Denied: Only @thapar.edu emails are allowed.', 'error');
-      return;
-    }
-
-    setErrorMsg('');
-    setIsSigningIn(true);
-
-    setTimeout(() => {
-      setIsSigningIn(false);
-      const success = handleLogin(email);
-      if (success) {
-        onClose();
-        if (onAuthenticated) onAuthenticated();
-      } else {
-        setErrorMsg('Access Denied: Only @thapar.edu accounts are permitted.');
-      }
-    }, 600);
   };
 
   const handleSelectPreVerified = (email) => {
@@ -56,7 +29,6 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
       setErrorMsg('Access Denied: Only @thapar.edu Google email accounts are permitted.');
       return;
     }
-    setGoogleEmail(email);
     setErrorMsg('');
     setIsSigningIn(true);
     setTimeout(() => {
@@ -64,7 +36,7 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
       handleLogin(email);
       onClose();
       if (onAuthenticated) onAuthenticated();
-    }, 600);
+    }, 500);
   };
 
   return (
@@ -95,8 +67,8 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleGoogleSubmit} className="modal-body">
+        {/* Modal Body */}
+        <div className="modal-body">
           
           <div style={{
             padding: '0.75rem',
@@ -175,6 +147,7 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
                 <button
                   key={student.id}
                   type="button"
+                  disabled={isSigningIn}
                   onClick={() => handleSelectPreVerified(student.email)}
                   style={{
                     padding: '0.6rem 0.85rem',
@@ -205,30 +178,7 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
             </div>
           </div>
 
-          <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-light)', margin: '0.75rem 0' }}>
-            — or enter custom @thapar.edu Google email —
-          </div>
-
-          {/* Manual Google Email Input */}
-          <div className="form-group">
-            <input 
-              type="email"
-              className="form-input"
-              placeholder="yourname@thapar.edu"
-              value={googleEmail}
-              onChange={(e) => setGoogleEmail(e.target.value)}
-            />
-          </div>
-
-          <button 
-            type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem' }}
-            disabled={isSigningIn}
-          >
-            {isSigningIn ? 'Authenticating with Google...' : 'Continue to Thapar Marketplace'}
-          </button>
-        </form>
+        </div>
       </div>
     </div>
   );
