@@ -168,41 +168,41 @@ export const LandingPage = ({ onExploreMarketplace }) => {
 
       </section>
 
-      {/* Feature Pillars Grid */}
+      {/* Feature Pillars Grid (Compact) */}
       <section style={{
-        padding: '3rem 1.5rem',
+        padding: '1.75rem 1.5rem',
         backgroundColor: 'var(--bg-card)',
         borderTop: '1px solid var(--border-color)',
         borderBottom: '1px solid var(--border-color)'
       }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '2rem' }}>
+        <div style={{ maxWidth: '850px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem' }}>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ShieldCheck size={24} color="var(--noir-silver)" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <div style={{ width: '34px', height: '34px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ShieldCheck size={18} color="var(--noir-silver)" />
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--noir-silver)' }}>100% Verified TIET Students</h3>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-main)' }}>100% Verified TIET Students</h3>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
               Strict Google OAuth email authentication. Only students holding an active `@thapar.edu` account can publish or purchase.
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MessageSquare size={24} color="var(--noir-silver)" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <div style={{ width: '34px', height: '34px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <MessageSquare size={18} color="var(--noir-silver)" />
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--noir-silver)' }}>Real-Time Offer Negotiation</h3>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-main)' }}>Real-Time Offer Negotiation</h3>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
               Chat 1-on-1 directly with sellers. Propose custom price counter-offers and set safe campus meetup locations.
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MapPin size={24} color="var(--noir-silver)" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <div style={{ width: '34px', height: '34px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <MapPin size={18} color="var(--noir-silver)" />
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--noir-silver)' }}>Safe Campus Meetup Spots</h3>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-main)' }}>Safe Campus Meetup Spots</h3>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
               Trade conveniently at recognizable campus landmarks like COS Canteen, Nava Nalanda Library Plaza, and Hostel J.
             </p>
           </div>
