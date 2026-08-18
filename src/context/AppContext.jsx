@@ -166,7 +166,30 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // Authentication Handlers
+  // Real Google OAuth & Auth Handlers
+  const signInWithGoogle = async () => {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin,
+            queryParams: {
+              hd: 'thapar.edu' // Google Hosted Domain restriction strictly for @thapar.edu
+            }
+          }
+        });
+        if (error) {
+          addToast(`Google Sign-In Error: ${error.message}`, 'error');
+        }
+      } catch (err) {
+        addToast(`Google Auth Exception: ${err.message}`, 'error');
+      }
+    } else {
+      setIsAuthOpen(true);
+    }
+  };
+
   const handleLogin = (email) => {
     const cleanEmail = (email || '').trim().toLowerCase();
 
@@ -491,6 +514,7 @@ export const AppProvider = ({ children }) => {
         allStudents,
         switchPersona,
         handleLogin,
+        signInWithGoogle,
         selectedCollege,
         setSelectedCollege,
         isAuthOpen,
