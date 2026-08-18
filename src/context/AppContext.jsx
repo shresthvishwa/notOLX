@@ -214,6 +214,20 @@ export const AppProvider = ({ children }) => {
   };
 
   // Authentication Handlers
+  const handleLogout = async () => {
+    try {
+      if (isSupabaseConfigured && supabase) {
+        await supabase.auth.signOut();
+      }
+    } catch (err) {
+      console.error('Supabase signout error:', err);
+    }
+    setCurrentUser(null);
+    localStorage.removeItem('notolx_current_user');
+    localStorage.setItem('notolx_view_mode', 'landing');
+    addToast('Signed out of Thapar Marketplace.', 'info');
+  };
+
   const handleLogin = (email) => {
     const cleanEmail = (email || '').trim().toLowerCase();
 
@@ -505,6 +519,7 @@ export const AppProvider = ({ children }) => {
         allStudents,
         switchPersona,
         handleLogin,
+        handleLogout,
         selectedCollege,
         setSelectedCollege,
         isAuthOpen,
