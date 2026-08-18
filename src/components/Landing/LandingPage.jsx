@@ -112,7 +112,7 @@ export const LandingPage = ({ onExploreMarketplace }) => {
           boxShadow: 'var(--shadow-sm)'
         }}>
           <ShieldCheck size={16} color="var(--noir-silver)" />
-          <span>THAPAR INSTITUTE EXCLUSIVE • @THAPAR.EDU</span>
+          <span>THAPAR UNIVERSITY EXCLUSIVE</span>
         </div>
 
         <h1 style={{
@@ -133,7 +133,7 @@ export const LandingPage = ({ onExploreMarketplace }) => {
           maxWidth: '680px',
           lineHeight: 1.6
         }}>
-          Buy & sell used Casio calculators, DSA textbooks, gear bikes, dorm appliances, and lab coats safely within the TIET campus. Restricted strictly to verified <strong>@thapar.edu</strong> accounts.
+          The Verified Student Marketplace for Thapar University. Buy and sell campus essentials—from textbooks to electronics—exclusively with verified <strong>@thapar.edu</strong> accounts.
         </p>
 
         {/* Primary CTA Button: Sign In with Google */}
@@ -164,75 +164,6 @@ export const LandingPage = ({ onExploreMarketplace }) => {
           <span style={{ fontSize: '0.78rem', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
             <Lock size={12} /> Google SSO domain check automatically enforced
           </span>
-        </div>
-
-        {/* 3 Initial Demo Student Accounts Quick Login Banner */}
-        <div style={{
-          marginTop: '3rem',
-          width: '100%',
-          maxWidth: '900px',
-          padding: '1.5rem',
-          backgroundColor: 'var(--bg-card)',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border-color)',
-          textAlign: 'left'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Instant Demo Sign-In (Initial Thapar Students)
-            </span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              1-Click Account Switcher
-            </span>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-            {allStudents.map(student => (
-              <div 
-                key={student.id}
-                onClick={() => handleQuickDemoClick(student.id)}
-                style={{
-                  padding: '1rem',
-                  borderRadius: 'var(--radius-md)',
-                  backgroundColor: 'var(--bg-input)',
-                  border: '1px solid var(--border-color)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.85rem'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--text-main)';
-                  e.currentTarget.style.backgroundColor = 'var(--border-color)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border-color)';
-                  e.currentTarget.style.backgroundColor = 'var(--bg-input)';
-                }}
-              >
-                <img 
-                  src={student.avatar_url} 
-                  alt={student.full_name} 
-                  style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border-color)' }}
-                />
-
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-main)' }}>
-                    {student.full_name}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {student.email}
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                    {student.major}
-                  </div>
-                </div>
-
-                <ChevronRight size={16} color="var(--text-main)" />
-              </div>
-            ))}
-          </div>
         </div>
 
       </section>
