@@ -168,13 +168,13 @@ export const CreateEditListingModal = () => {
           {/* Pricing Row */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
-              <label className="form-label">Selling Price ($) *</label>
+              <label className="form-label">Selling Price (₹) *</label>
               <input 
                 type="number" 
                 step="0.5"
                 min="1"
                 className="form-input"
-                placeholder="45.00"
+                placeholder="450.00"
                 value={formData.price}
                 onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                 required
@@ -182,7 +182,7 @@ export const CreateEditListingModal = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Original Retail Price ($)</label>
+              <label className="form-label">Original Retail Price (₹)</label>
               <input 
                 type="number" 
                 step="0.5"

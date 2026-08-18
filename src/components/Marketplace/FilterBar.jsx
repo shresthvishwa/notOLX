@@ -116,7 +116,7 @@ export const FilterBar = () => {
           {/* Max Price Filter */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)' }}>Max Price:</span>
-            <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--primary)' }}>${priceRange.max}</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--primary)' }}>₹{priceRange.max}</span>
             <input
               type="range"
               min="10"
