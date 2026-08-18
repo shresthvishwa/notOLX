@@ -33,10 +33,21 @@ export const Navbar = () => {
   } = useApp();
 
   const [isPersonaMenuOpen, setIsPersonaMenuOpen] = useState(false);
+  const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
 
-  const activeUserConversations = currentUser ? conversations.filter(
-    c => c.buyer_id === currentUser.id || c.seller_id === currentUser.id
-  ) : [];
+  // Match conversations for current user by ID or Email (fallback to all conversations)
+  const userConvs = currentUser ? conversations.filter(c => {
+    if (!c) return false;
+    const isBuyer = c.buyer_id === currentUser.id;
+    const isSeller = c.seller_id === currentUser.id;
+    const buyerStudent = allStudents.find(s => s.id === c.buyer_id);
+    const sellerStudent = allStudents.find(s => s.id === c.seller_id);
+    const emailMatch = (buyerStudent && buyerStudent.email?.toLowerCase() === currentUser.email?.toLowerCase()) ||
+                       (sellerStudent && sellerStudent.email?.toLowerCase() === currentUser.email?.toLowerCase());
+    return isBuyer || isSeller || emailMatch;
+  }) : conversations;
+
+  const activeUserConversations = userConvs.length > 0 ? userConvs : conversations;
 
   return (
     <nav className="navbar">
@@ -79,40 +90,117 @@ export const Navbar = () => {
             <span>Sell Item</span>
           </button>
 
-          {/* Messages Notification Button */}
-          <button 
-            className="btn btn-secondary"
-            onClick={() => {
-              if (activeUserConversations.length > 0) {
-                setActiveChat(activeUserConversations[0]);
-              } else {
-                alert('No active messages yet. Click "Chat with Seller" on any item to negotiate!');
-              }
-            }}
-            style={{ position: 'relative' }}
-            title="Campus Chat & Offers"
-          >
-            <MessageSquare size={18} />
-            {activeUserConversations.length > 0 && (
-              <span style={{
+          {/* Messages Notification Button & Dropdown */}
+          <div style={{ position: 'relative' }}>
+            <button 
+              className="btn btn-secondary"
+              onClick={() => setIsChatMenuOpen(!isChatMenuOpen)}
+              style={{ position: 'relative' }}
+              title="Campus Chat & Offers"
+            >
+              <MessageSquare size={18} />
+              {activeUserConversations.length > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  right: '-4px',
+                  backgroundColor: 'var(--primary)',
+                  color: '#ffffff',
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {activeUserConversations.length}
+                </span>
+              )}
+            </button>
+
+            {/* Conversations Dropdown List */}
+            {isChatMenuOpen && (
+              <div style={{
                 position: 'absolute',
-                top: '-4px',
-                right: '-4px',
-                backgroundColor: 'var(--primary)',
-                color: '#ffffff',
-                fontSize: '0.68rem',
-                fontWeight: 800,
-                width: '18px',
-                height: '18px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
+                top: '110%',
+                right: 0,
+                zIndex: 60,
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-md)',
+                width: '320px',
+                boxShadow: 'var(--shadow-lg)',
+                overflow: 'hidden'
               }}>
-                {activeUserConversations.length}
-              </span>
+                <div style={{
+                  padding: '0.75rem 1rem',
+                  borderBottom: '1px solid var(--border-color)',
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  display: 'flex',
+                  justify: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: 'var(--bg-input)'
+                }}>
+                  <span>Campus Messages ({activeUserConversations.length})</span>
+                  <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 700 }}>● Live</span>
+                </div>
+
+                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                  {activeUserConversations.length === 0 ? (
+                    <div style={{ padding: '1.5rem', textAlign: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                      No active messages yet. Click "Chat with Seller" on any listing to negotiate!
+                    </div>
+                  ) : (
+                    activeUserConversations.map(conv => {
+                      const otherId = conv.buyer_id === currentUser.id ? conv.seller_id : conv.buyer_id;
+                      const otherUser = allStudents.find(s => s.id === otherId) || { full_name: 'Thapar Trader', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=trader' };
+
+                      return (
+                        <div
+                          key={conv.id}
+                          onClick={() => {
+                            setActiveChat(conv);
+                            setIsChatMenuOpen(false);
+                          }}
+                          style={{
+                            padding: '0.75rem 1rem',
+                            borderBottom: '1px solid var(--border-color)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.65rem',
+                            transition: 'background 0.15s ease'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-input)'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <img
+                            src={otherUser.avatar_url}
+                            alt={otherUser.full_name}
+                            style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
+                          />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontWeight: 800, fontSize: '0.85rem' }}>{otherUser.full_name}</span>
+                              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                                {new Date(conv.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '0.1rem' }}>
+                              {conv.last_message}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             )}
-          </button>
+          </div>
 
           {/* User Profile & Log Out Menu */}
           {currentUser ? (

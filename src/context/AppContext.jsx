@@ -473,9 +473,16 @@ export const AppProvider = ({ children }) => {
 
   // Chat & Messaging Handlers
   const startOrOpenChat = (product) => {
-    const existingConv = conversations.find(
-      c => c.product_id === product.id && (c.buyer_id === currentUser.id || c.seller_id === currentUser.id)
-    );
+    const existingConv = conversations.find(c => {
+      if (c.product_id !== product.id) return false;
+      const isBuyer = c.buyer_id === currentUser.id;
+      const isSeller = c.seller_id === currentUser.id;
+      const buyerStudent = allStudents.find(s => s.id === c.buyer_id);
+      const sellerStudent = allStudents.find(s => s.id === c.seller_id);
+      const emailMatch = (buyerStudent && buyerStudent.email?.toLowerCase() === currentUser.email?.toLowerCase()) ||
+                         (sellerStudent && sellerStudent.email?.toLowerCase() === currentUser.email?.toLowerCase());
+      return isBuyer || isSeller || emailMatch;
+    }) || conversations.find(c => c.product_id === product.id);
 
     if (existingConv) {
       setActiveChat(existingConv);
