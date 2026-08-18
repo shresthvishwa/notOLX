@@ -73,31 +73,10 @@ const MarketplaceView = ({ onBackToLanding }) => {
           flexWrap: 'wrap',
           gap: '1rem'
         }}>
-          <div style={{ maxWidth: '600px' }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              color: '#ffffff',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              padding: '0.2rem 0.75rem',
-              borderRadius: 'var(--radius-full)',
-              fontSize: '0.78rem',
-              fontWeight: 800,
-              marginBottom: '0.75rem',
-              backdropFilter: 'blur(4px)'
-            }}>
-              <GraduationCap size={16} /> Thapar University Exclusive (@thapar.edu)
-            </div>
-
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', fontWeight: 800, lineHeight: 1.2, marginBottom: '0.5rem', color: '#ffffff' }}>
-              Buy & Sell Used TIET Campus Essentials
+          <div>
+            <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1.2, margin: 0, color: '#ffffff' }}>
+              Your Trusted Peer-to-Peer Campus Exchange
             </h1>
-
-            <p style={{ fontSize: '0.95rem', color: 'var(--hero-muted)', lineHeight: 1.5 }}>
-              Restricted exclusively to verified <strong>@thapar.edu</strong> student accounts. Buy & sell Casio calculators, DSA textbooks, cycles, and lab coats from students like Shresth Vishwakarma, Aditya Salwan, and Nishchay Goyal.
-            </p>
           </div>
 
           <button 
