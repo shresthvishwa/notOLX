@@ -71,7 +71,19 @@ export const AppProvider = ({ children }) => {
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false);
   const [editingListing, setEditingListing] = useState(null);
   const [activeProductDetail, setActiveProductDetail] = useState(null);
-  const [activeChat, setActiveChat] = useState(null); // conversation object or { product, seller }
+  const [activeChat, setActiveChat] = useState(() => {
+    const savedId = localStorage.getItem('notolx_active_chat_id');
+    const savedConvs = localStorage.getItem('notolx_conversations');
+    if (savedId && savedConvs) {
+      try {
+        const convs = JSON.parse(savedConvs);
+        return convs.find(c => c.id === savedId) || null;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
   const [reviewPendingProduct, setReviewPendingProduct] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -98,12 +110,52 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('notolx_conversations', JSON.stringify(conversations));
     if (activeChat) {
+      localStorage.setItem('notolx_active_chat_id', activeChat.id);
       const updatedActive = conversations.find(c => c.id === activeChat.id);
       if (updatedActive && updatedActive.messages.length !== activeChat.messages.length) {
         setActiveChat(updatedActive);
       }
+    } else {
+      localStorage.removeItem('notolx_active_chat_id');
     }
   }, [conversations, activeChat]);
+
+  // Live Real-Time Message Polling Engine (Polls for live incoming messages when active chat modal is open)
+  useEffect(() => {
+    if (!activeChat) return;
+
+    const syncLiveMessages = async () => {
+      // 1. Fetch from Express backend server if available
+      try {
+        const res = await fetch('http://localhost:5000/api/conversations');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.conversations && data.conversations.length > 0) {
+            setConversations(prev => {
+              // Merge remote server conversations with local state
+              const merged = [...prev];
+              data.conversations.forEach(remote => {
+                const idx = merged.findIndex(c => c.id === remote.id);
+                if (idx !== -1) {
+                  if (remote.messages.length > merged[idx].messages.length) {
+                    merged[idx] = remote;
+                  }
+                } else {
+                  merged.unshift(remote);
+                }
+              });
+              return merged;
+            });
+          }
+        }
+      } catch (err) {
+        // Fallback to storage sync
+      }
+    };
+
+    const interval = setInterval(syncLiveMessages, 1000);
+    return () => clearInterval(interval);
+  }, [activeChat]);
 
   useEffect(() => {
     localStorage.setItem('notolx_reviews', JSON.stringify(reviews));
@@ -398,6 +450,18 @@ export const AppProvider = ({ children }) => {
         }).then(({ data, error }) => {
           if (error) console.warn('Supabase conversation insert error:', error);
         });
+      } else {
+        // Persist to local Express server DB
+        fetch('http://localhost:5000/api/conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_id: product.id,
+            buyer_id: currentUser.id,
+            seller_id: product.seller_id,
+            initial_message: newConv.messages[0].content
+          })
+        }).catch(() => {});
       }
     }
   };
@@ -446,6 +510,23 @@ export const AppProvider = ({ children }) => {
         });
       } catch (err) {
         console.warn('Supabase message send error:', err);
+      }
+    } else {
+      // Persist to Express backend DB
+      try {
+        await fetch('http://localhost:5000/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversation_id: conversationId,
+            sender_id: currentUser.id,
+            content: content,
+            offer_price: offerPrice ? parseFloat(offerPrice) : null,
+            meetup_spot: meetupSpot
+          })
+        });
+      } catch (err) {
+        console.warn('Express message post error:', err);
       }
     }
   };

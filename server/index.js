@@ -158,11 +158,50 @@ app.delete('/api/listings/:id', (req, res) => {
 });
 
 // Chat Endpoints
+app.get('/api/conversations', (req, res) => {
+  const db = readDB();
+  res.json({ count: db.conversations.length, conversations: db.conversations });
+});
+
 app.get('/api/conversations/:userId', (req, res) => {
   const db = readDB();
   const userId = req.params.userId;
   const userConvs = db.conversations.filter(c => c.buyer_id === userId || c.seller_id === userId);
   res.json({ count: userConvs.length, conversations: userConvs });
+});
+
+app.post('/api/conversations', (req, res) => {
+  const db = readDB();
+  const { product_id, buyer_id, seller_id, initial_message } = req.body;
+
+  let existing = db.conversations.find(
+    c => c.product_id === product_id && (c.buyer_id === buyer_id || c.seller_id === buyer_id)
+  );
+
+  if (existing) {
+    return res.json({ success: true, conversation: existing });
+  }
+
+  const newConv = {
+    id: `conv_${Date.now()}`,
+    product_id,
+    buyer_id,
+    seller_id,
+    last_message: initial_message || 'New conversation started',
+    updated_at: new Date().toISOString(),
+    messages: [
+      {
+        id: `msg_${Date.now()}`,
+        sender_id: buyer_id,
+        content: initial_message || 'Hi, I am interested in this item.',
+        created_at: new Date().toISOString()
+      }
+    ]
+  };
+
+  db.conversations.unshift(newConv);
+  writeDB(db);
+  res.status(201).json({ success: true, conversation: newConv });
 });
 
 app.post('/api/messages', (req, res) => {
