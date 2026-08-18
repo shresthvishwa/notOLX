@@ -73,10 +73,13 @@ const MarketplaceView = ({ onBackToLanding }) => {
           flexWrap: 'wrap',
           gap: '1rem'
         }}>
-          <div>
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1.2, margin: 0, color: '#ffffff' }}>
+          <div style={{ maxWidth: '650px' }}>
+            <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1.2, marginBottom: '0.4rem', color: '#ffffff' }}>
               Your Trusted Peer-to-Peer Campus Exchange
             </h1>
+            <p style={{ fontSize: '0.95rem', color: 'var(--hero-muted)', lineHeight: 1.5, margin: 0 }}>
+              Save money, declutter your room, and get what you need for the semester directly from fellow students.
+            </p>
           </div>
 
           <button 
