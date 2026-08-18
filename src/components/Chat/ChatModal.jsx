@@ -22,7 +22,8 @@ export const ChatModal = () => {
     currentUser, 
     allStudents, 
     rawListings,
-    markListingStatus
+    markListingStatus,
+    switchPersona
   } = useApp();
 
   const [messageInput, setMessageInput] = useState('');
@@ -213,9 +214,21 @@ export const ChatModal = () => {
               )}
             </div>
 
-            <button className="modal-close-btn" onClick={() => setActiveChat(null)}>
-              <X size={20} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button 
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => switchPersona(otherUser.id)}
+                title={`Switch active account to ${otherUser.full_name} to test sending a reply`}
+                style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem' }}
+              >
+                Test as {otherUser.full_name.split(' ')[0]}
+              </button>
+
+              <button className="modal-close-btn" onClick={() => setActiveChat(null)}>
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           {/* Messages Stream */}

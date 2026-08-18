@@ -353,7 +353,7 @@ export const AppProvider = ({ children }) => {
     if (existingConv) {
       setActiveChat(existingConv);
     } else {
-      // Create new conversation
+      // Create new conversation between Buyer and Seller
       const newConv = {
         id: `conv_${Date.now()}`,
         product_id: product.id,
@@ -374,34 +374,21 @@ export const AppProvider = ({ children }) => {
       setConversations(prev => [newConv, ...prev]);
       setActiveChat(newConv);
 
-      // Automated Mock Seller Response in sandbox mode
-      if (product.seller_id !== currentUser.id) {
-        setTimeout(() => {
-          const sellerUser = allStudents.find(s => s.id === product.seller_id) || MOCK_STUDENTS[1];
-          const autoMsg = {
-            id: `msg_${Date.now() + 1}`,
-            sender_id: product.seller_id,
-            content: `Hey ${currentUser.full_name.split(' ')[0]}! Yes, it's available. Where would you like to meet up on campus?`,
-            created_at: new Date().toISOString()
-          };
-
-          setConversations(prev => prev.map(c => {
-            if (c.id === newConv.id) {
-              return {
-                ...c,
-                last_message: autoMsg.content,
-                updated_at: autoMsg.created_at,
-                messages: [...c.messages, autoMsg]
-              };
-            }
-            return c;
-          }));
-        }, 1500);
+      // Persist to Supabase if configured
+      if (isSupabaseConfigured && supabase) {
+        supabase.from('conversations').insert({
+          product_id: product.id,
+          buyer_id: currentUser.id,
+          seller_id: product.seller_id,
+          last_message: newConv.last_message
+        }).then(({ data, error }) => {
+          if (error) console.warn('Supabase conversation insert error:', error);
+        });
       }
     }
   };
 
-  const sendMessage = (conversationId, content, offerPrice = null, meetupSpot = null) => {
+  const sendMessage = async (conversationId, content, offerPrice = null, meetupSpot = null) => {
     const newMessage = {
       id: `msg_${Date.now()}`,
       sender_id: currentUser.id,
@@ -411,6 +398,7 @@ export const AppProvider = ({ children }) => {
       created_at: new Date().toISOString()
     };
 
+    // Update local and cross-tab state immediately
     setConversations(prev => prev.map(conv => {
       if (conv.id === conversationId) {
         const updatedMessages = [...conv.messages, newMessage];
@@ -432,42 +420,19 @@ export const AppProvider = ({ children }) => {
       }));
     }
 
-    // Interactive Seller Auto Reply when buyer makes an offer
-    const currentConv = conversations.find(c => c.id === conversationId);
-    if (currentConv && currentConv.seller_id !== currentUser.id) {
-      setTimeout(() => {
-        let replyText = "Sounds good! I can meet you at " + (meetupSpot || "the Main Library Plaza");
-        if (offerPrice) {
-          replyText = `₹${offerPrice} works for me! Let's lock in the deal and meet at ${meetupSpot || 'Main Quad'}.`;
-        }
-
-        const autoReply = {
-          id: `msg_${Date.now() + 10}`,
-          sender_id: currentConv.seller_id,
-          content: replyText,
-          created_at: new Date().toISOString()
-        };
-
-        setConversations(prevList => prevList.map(c => {
-          if (c.id === conversationId) {
-            return {
-              ...c,
-              last_message: autoReply.content,
-              updated_at: autoReply.created_at,
-              messages: [...c.messages, autoReply]
-            };
-          }
-          return c;
-        }));
-
-        if (activeChat && activeChat.id === conversationId) {
-          setActiveChat(prev => ({
-            ...prev,
-            last_message: autoReply.content,
-            messages: [...prev.messages, autoReply]
-          }));
-        }
-      }, 1800);
+    // Persist message to Supabase Realtime database if active
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('messages').insert({
+          conversation_id: conversationId,
+          sender_id: currentUser.id,
+          content: content,
+          offer_price: offerPrice ? parseFloat(offerPrice) : null,
+          meetup_spot: meetupSpot
+        });
+      } catch (err) {
+        console.warn('Supabase message send error:', err);
+      }
     }
   };
 
