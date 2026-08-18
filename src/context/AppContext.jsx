@@ -226,6 +226,7 @@ export const AppProvider = ({ children }) => {
     if (existing) {
       setCurrentUser(existing);
       setIsAuthOpen(false);
+      localStorage.setItem('notolx_view_mode', 'marketplace');
       addToast(`Welcome back, ${existing.full_name}!`, 'success');
       return true;
     } else {
@@ -251,6 +252,7 @@ export const AppProvider = ({ children }) => {
       setAllStudents(prev => [...prev, newStudent]);
       setCurrentUser(newStudent);
       setIsAuthOpen(false);
+      localStorage.setItem('notolx_view_mode', 'marketplace');
       addToast(`Account created! Verified student for Thapar Institute of Engineering & Technology`, 'success');
       return true;
     }
