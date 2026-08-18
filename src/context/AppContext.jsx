@@ -41,10 +41,10 @@ export const AppProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : MOCK_REVIEWS;
   });
 
-  // Theme State (Dark Gothic Noir vs Light Mode)
+  // Theme State (Light Mode Default vs Dark Gothic Noir)
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('notolx_theme');
-    return saved || 'dark';
+    return saved || 'light';
   });
 
   const toggleTheme = () => {

@@ -1,53 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap');
 
-:root, [data-theme='dark'] {
+:root, [data-theme='light'] {
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Space Grotesk', sans-serif;
 
-  /* Gothic Noir Palette - Dark Theme Default */
-  --noir-black: #000000;
-  --noir-silver: #D1D0D0;
-  --noir-taupe: #988686;
-  --noir-charcoal: #5C4E4E;
-
-  /* Semantic Variables - Dark Mode */
-  --primary: #988686;
-  --primary-hover: #D1D0D0;
-  --primary-btn-bg: #D1D0D0;
-  --primary-btn-text: #000000;
-  --primary-light: rgba(152, 134, 134, 0.22);
-  --primary-ring: rgba(209, 208, 208, 0.3);
-  
-  --accent: #D1D0D0;
-  --accent-dark: #5C4E4E;
-
-  --bg-app: #080707;
-  --bg-card: #141212;
-  --bg-card-hover: #1e1a1a;
-  --bg-input: #242020;
-  --border-color: #383030;
-  --border-color-hover: #5C4E4E;
-  
-  --text-main: #f3f3f3;
-  --text-muted: #a39595;
-  --text-light: #7b6d6d;
-
-  --hero-bg: linear-gradient(135deg, #141212 0%, #242020 50%, #5C4E4E 100%);
-  --hero-text: #ffffff;
-  --hero-muted: rgba(255, 255, 255, 0.85);
-
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.8), 0 0 1px rgba(209, 208, 208, 0.2);
-
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-}
-
-[data-theme='light'] {
-  /* Gothic Noir Light Mode Palette - Ultra Clear High Contrast */
+  /* Gothic Noir Light Mode Palette - Default Light Theme */
   --noir-black: #ffffff;
   --noir-silver: #110e0e;
   --noir-taupe: #4d4040;
@@ -82,6 +39,49 @@
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+}
+
+[data-theme='dark'] {
+  /* Gothic Noir Palette - Dark Theme */
+  --noir-black: #000000;
+  --noir-silver: #D1D0D0;
+  --noir-taupe: #988686;
+  --noir-charcoal: #5C4E4E;
+
+  /* Semantic Variables - Dark Mode */
+  --primary: #988686;
+  --primary-hover: #D1D0D0;
+  --primary-btn-bg: #D1D0D0;
+  --primary-btn-text: #000000;
+  --primary-light: rgba(152, 134, 134, 0.22);
+  --primary-ring: rgba(209, 208, 208, 0.3);
+  
+  --accent: #D1D0D0;
+  --accent-dark: #5C4E4E;
+
+  --bg-app: #080707;
+  --bg-card: #141212;
+  --bg-card-hover: #1e1a1a;
+  --bg-input: #242020;
+  --border-color: #383030;
+  --border-color-hover: #5C4E4E;
+  
+  --text-main: #f3f3f3;
+  --text-muted: #a39595;
+  --text-light: #7b6d6d;
+
+  --hero-bg: linear-gradient(135deg, #141212 0%, #242020 50%, #5C4E4E 100%);
+  --hero-text: #ffffff;
+  --hero-muted: rgba(255, 255, 255, 0.85);
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.8), 0 0 1px rgba(209, 208, 208, 0.2);
 }
 
 * {
