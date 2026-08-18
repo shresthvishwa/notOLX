@@ -107,21 +107,27 @@
         {
           "id": "msg_1",
           "sender_id": "usr_1",
+          "receiver_id": "usr_2",
           "content": "Hi Aditya! Is the Casio calculator still available?",
+          "status": "sent",
           "created_at": "2026-08-17T11:30:00Z"
         },
         {
           "id": "msg_2",
           "sender_id": "usr_2",
+          "receiver_id": "usr_1",
           "content": "Hey Shresth! Yes it is. Works great for end-sem maths exams.",
+          "status": "sent",
           "created_at": "2026-08-17T11:42:00Z"
         },
         {
           "id": "msg_3",
           "sender_id": "usr_1",
+          "receiver_id": "usr_2",
           "content": "Awesome! Would you accept ₹40 for a quick meetup at COS Canteen?",
           "offer_price": 40.00,
           "meetup_spot": "COS (Center of Studies) Canteen",
+          "status": "sent",
           "created_at": "2026-08-17T12:00:00Z"
         }
       ]

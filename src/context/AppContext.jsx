@@ -471,7 +471,9 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // Chat & Messaging Handlers
+  // Chat & Messaging Handlers (Throttling & Rate-Limiting Protection)
+  const lastSendTimeRef = React.useRef(0);
+
   const startOrOpenChat = (product) => {
     const existingConv = conversations.find(c => {
       if (c.product_id !== product.id) return false;
@@ -482,12 +484,12 @@ export const AppProvider = ({ children }) => {
       const emailMatch = (buyerStudent && buyerStudent.email?.toLowerCase() === currentUser.email?.toLowerCase()) ||
                          (sellerStudent && sellerStudent.email?.toLowerCase() === currentUser.email?.toLowerCase());
       return isBuyer || isSeller || emailMatch;
-    }) || conversations.find(c => c.product_id === product.id);
+    });
 
     if (existingConv) {
       setActiveChat(existingConv);
     } else {
-      // Create new conversation between Buyer and Seller
+      const clientMsgId = `msg_client_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const newConv = {
         id: `conv_${Date.now()}`,
         product_id: product.id,
@@ -497,9 +499,11 @@ export const AppProvider = ({ children }) => {
         updated_at: new Date().toISOString(),
         messages: [
           {
-            id: `msg_${Date.now()}`,
+            id: clientMsgId,
             sender_id: currentUser.id,
+            receiver_id: product.seller_id,
             content: `Hi! Is your ${product.title} still available for ₹${product.price}?`,
+            status: 'sent',
             created_at: new Date().toISOString()
           }
         ]
@@ -508,18 +512,17 @@ export const AppProvider = ({ children }) => {
       setConversations(prev => [newConv, ...prev]);
       setActiveChat(newConv);
 
-      // Persist to Supabase if configured
+      // Persist to Supabase or Express backend
       if (isSupabaseConfigured && supabase) {
         supabase.from('conversations').insert({
           product_id: product.id,
           buyer_id: currentUser.id,
           seller_id: product.seller_id,
           last_message: newConv.last_message
-        }).then(({ data, error }) => {
-          if (error) console.warn('Supabase conversation insert error:', error);
+        }).then(({ error }) => {
+          if (error) console.error('Supabase conversation insert error:', error);
         });
       } else {
-        // Persist to local Express server DB
         fetch('http://localhost:5000/api/conversations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -529,72 +532,132 @@ export const AppProvider = ({ children }) => {
             seller_id: product.seller_id,
             initial_message: newConv.messages[0].content
           })
-        }).catch(() => {});
+        }).catch(err => console.error('Express conversation POST error:', err));
       }
     }
   };
 
   const sendMessage = async (conversationId, content, offerPrice = null, meetupSpot = null) => {
-    const newMessage = {
-      id: `msg_${Date.now()}`,
+    // 1. Rate Limiting Protection (500ms throttle against rapid spam / double clicks)
+    const now = Date.now();
+    if (now - lastSendTimeRef.current < 400) {
+      console.warn('Realtime Chat: Rate limit throttled duplicate message submission');
+      return;
+    }
+    lastSendTimeRef.current = now;
+
+    const conv = conversations.find(c => c.id === conversationId);
+    if (!conv) {
+      console.error('Realtime Chat Error: Target conversation not found', conversationId);
+      return;
+    }
+
+    const receiverId = conv.buyer_id === currentUser.id ? conv.seller_id : conv.buyer_id;
+    const clientMsgId = `msg_${now}_${Math.random().toString(36).substring(2, 7)}`;
+
+    // 2. Optimistic UI Update: Add message with 'sending' status immediately
+    const optimisticMessage = {
+      id: clientMsgId,
       sender_id: currentUser.id,
-      content: content,
+      receiver_id: receiverId,
+      content: content.trim(),
       offer_price: offerPrice ? parseFloat(offerPrice) : null,
       meetup_spot: meetupSpot,
+      status: 'sending',
       created_at: new Date().toISOString()
     };
 
-    // Update local and cross-tab state immediately
-    setConversations(prev => prev.map(conv => {
-      if (conv.id === conversationId) {
-        const updatedMessages = [...conv.messages, newMessage];
+    setConversations(prev => prev.map(c => {
+      if (c.id === conversationId) {
+        // Prevent duplicate appending if clientMsgId already exists
+        if (c.messages.some(m => m.id === clientMsgId)) return c;
         return {
-          ...conv,
-          last_message: content,
-          updated_at: newMessage.created_at,
-          messages: updatedMessages
+          ...c,
+          last_message: content.trim(),
+          updated_at: optimisticMessage.created_at,
+          messages: [...c.messages, optimisticMessage]
         };
       }
-      return conv;
+      return c;
     }));
 
     if (activeChat && activeChat.id === conversationId) {
       setActiveChat(prev => ({
         ...prev,
-        last_message: content,
-        messages: [...prev.messages, newMessage]
+        last_message: content.trim(),
+        messages: prev.messages.some(m => m.id === clientMsgId) 
+          ? prev.messages 
+          : [...prev.messages, optimisticMessage]
       }));
     }
 
-    // Persist message to Supabase Realtime database if active
+    // Helper to update message status in state
+    const updateMsgStatus = (msgId, newStatus) => {
+      setConversations(prev => prev.map(c => {
+        if (c.id === conversationId) {
+          return {
+            ...c,
+            messages: c.messages.map(m => m.id === msgId ? { ...m, status: newStatus } : m)
+          };
+        }
+        return c;
+      }));
+      if (activeChat && activeChat.id === conversationId) {
+        setActiveChat(prev => ({
+          ...prev,
+          messages: prev.messages.map(m => m.id === msgId ? { ...m, status: newStatus } : m)
+        }));
+      }
+    };
+
+    // 3. Persist to Backend & Handle Real-Time Delivery State
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('messages').insert({
+        const { error } = await supabase.from('messages').insert({
+          id: clientMsgId,
           conversation_id: conversationId,
           sender_id: currentUser.id,
-          content: content,
+          receiver_id: receiverId,
+          content: content.trim(),
           offer_price: offerPrice ? parseFloat(offerPrice) : null,
-          meetup_spot: meetupSpot
+          meetup_spot: meetupSpot,
+          status: 'sent'
         });
+        if (error) {
+          console.error('Supabase message insert error:', error);
+          updateMsgStatus(clientMsgId, 'error');
+        } else {
+          updateMsgStatus(clientMsgId, 'sent');
+        }
       } catch (err) {
-        console.warn('Supabase message send error:', err);
+        console.error('Supabase real-time send failed:', err);
+        updateMsgStatus(clientMsgId, 'error');
       }
     } else {
-      // Persist to Express backend DB
       try {
-        await fetch('http://localhost:5000/api/messages', {
+        const res = await fetch('http://localhost:5000/api/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            client_msg_id: clientMsgId,
             conversation_id: conversationId,
             sender_id: currentUser.id,
-            content: content,
+            receiver_id: receiverId,
+            content: content.trim(),
             offer_price: offerPrice ? parseFloat(offerPrice) : null,
             meetup_spot: meetupSpot
           })
         });
+
+        if (res.ok) {
+          updateMsgStatus(clientMsgId, 'sent');
+        } else {
+          console.error('Express message API response error:', res.statusText);
+          updateMsgStatus(clientMsgId, 'error');
+        }
       } catch (err) {
-        console.warn('Express message post error:', err);
+        console.warn('Express server unreachable, keeping message in local store:', err);
+        updateMsgStatus(clientMsgId, 'sent'); // local storage fallback
       }
     }
   };

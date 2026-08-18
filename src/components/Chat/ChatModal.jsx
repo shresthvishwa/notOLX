@@ -307,9 +307,30 @@ export const ChatModal = () => {
                     <span>{msg.content}</span>
                   </div>
 
-                  <span style={{ fontSize: '0.68rem', color: 'var(--text-light)', marginTop: '0.2rem', padding: '0 0.3rem' }}>
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem', padding: '0 0.3rem' }}>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-light)' }}>
+                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    {isMine && (
+                      <span style={{ fontSize: '0.68rem', display: 'inline-flex', alignItems: 'center', gap: '0.15rem' }}>
+                        {msg.status === 'sending' && (
+                          <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Sending...</span>
+                        )}
+                        {msg.status === 'error' && (
+                          <span 
+                            onClick={() => sendMessage(conversation.id, msg.content, msg.offer_price, msg.meetup_spot)}
+                            style={{ color: '#ef4444', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.1rem' }}
+                            title="Failed to deliver. Click to retry."
+                          >
+                            ⚠️ Failed (Retry)
+                          </span>
+                        )}
+                        {(msg.status === 'sent' || !msg.status) && (
+                          <span style={{ color: isMine ? '#10b981' : 'var(--primary)', fontWeight: 800 }}>✓</span>
+                        )}
+                      </span>
+                    )}
+                  </div>
                 </div>
               );
             })}

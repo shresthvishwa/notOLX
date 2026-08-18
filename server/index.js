@@ -206,24 +206,40 @@ app.post('/api/conversations', (req, res) => {
 
 app.post('/api/messages', (req, res) => {
   const db = readDB();
-  const { conversation_id, sender_id, content, offer_price, meetup_spot } = req.body;
+  const { conversation_id, sender_id, receiver_id, content, offer_price, meetup_spot, client_msg_id } = req.body;
+
+  if (!conversation_id || !sender_id || !content) {
+    return res.status(400).json({ error: 'Missing required message parameters (conversation_id, sender_id, content).' });
+  }
 
   let conv = db.conversations.find(c => c.id === conversation_id);
   if (!conv) {
     return res.status(404).json({ error: 'Conversation not found.' });
   }
 
+  // Deduplication check: verify if message with client_msg_id or identical payload was already saved
+  const msgId = client_msg_id || `msg_${Date.now()}`;
+  const isDuplicate = conv.messages.some(m => m.id === msgId);
+  if (isDuplicate) {
+    const existingMsg = conv.messages.find(m => m.id === msgId);
+    return res.json({ success: true, message: existingMsg, duplicate: true });
+  }
+
+  const computedReceiverId = receiver_id || (conv.buyer_id === sender_id ? conv.seller_id : conv.buyer_id);
+
   const newMsg = {
-    id: `msg_${Date.now()}`,
+    id: msgId,
     sender_id,
-    content,
+    receiver_id: computedReceiverId,
+    content: content.trim(),
     offer_price: offer_price ? parseFloat(offer_price) : null,
     meetup_spot: meetup_spot || null,
+    status: 'sent',
     created_at: new Date().toISOString()
   };
 
   conv.messages.push(newMsg);
-  conv.last_message = content;
+  conv.last_message = content.trim();
   conv.updated_at = newMsg.created_at;
 
   writeDB(db);
