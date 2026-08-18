@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, ShieldCheck, Star, Package, MessageSquare, Edit3, Trash2 } from 'lucide-react';
+import { X, ShieldCheck, Star, Package, LogOut } from 'lucide-react';
 import { ProductCard } from '../Marketplace/ProductCard';
 
 export const ProfileModal = () => {
@@ -10,12 +10,13 @@ export const ProfileModal = () => {
     currentUser, 
     rawListings, 
     reviews,
-    allStudents 
+    allStudents,
+    handleLogout
   } = useApp();
 
   const [activeTab, setActiveTab] = useState('listings'); // 'listings' or 'reviews'
 
-  if (!isProfileOpen) return null;
+  if (!isProfileOpen || !currentUser) return null;
 
   const userListings = rawListings.filter(item => item.seller_id === currentUser.id);
   const userReviews = reviews.filter(r => r.reviewee_id === currentUser.id);
@@ -77,15 +78,28 @@ export const ProfileModal = () => {
               </div>
             </div>
 
-            {/* Rating Box */}
-            <div style={{ textAlign: 'center', paddingLeft: '1rem', borderLeft: '1px solid var(--border-color)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '1.3rem', fontWeight: 800, color: '#f59e0b', justifyContent: 'center' }}>
-                <Star size={20} fill="#f59e0b" />
-                <span>{currentUser.rating_avg || 5.0}</span>
+            {/* Rating & Log Out Box */}
+            <div style={{ textAlign: 'center', paddingLeft: '1rem', borderLeft: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '1.3rem', fontWeight: 800, color: '#f59e0b', justifyContent: 'center' }}>
+                  <Star size={20} fill="#f59e0b" />
+                  <span>{currentUser.rating_avg || 5.0}</span>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  {currentUser.rating_count || userReviews.length || 12} Campus Reviews
+                </div>
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                {currentUser.rating_count || userReviews.length || 12} Campus Reviews
-              </div>
+
+              <button
+                className="btn btn-danger btn-sm"
+                onClick={() => {
+                  handleLogout();
+                  setIsProfileOpen(false);
+                }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', marginTop: '0.2rem' }}
+              >
+                <LogOut size={14} /> Log Out
+              </button>
             </div>
           </div>
 

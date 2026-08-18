@@ -59,7 +59,7 @@ export const CreateEditListingModal = () => {
         original_price: '',
         category: 'calculators',
         condition: 'Like New',
-        campus_location: `${currentUser.dorm_block || 'Main Quad'} / Green Library`,
+        campus_location: `${currentUser?.dorm_block || 'Main Quad'} / Green Library`,
         imageUrlInput: ''
       });
       setImagesList([]);

@@ -6,14 +6,14 @@ import {
   PlusCircle, 
   MessageSquare, 
   User, 
-  CheckCircle2, 
   ChevronDown, 
   Moon, 
   Sun,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  LogOut,
+  LogIn
 } from 'lucide-react';
-import { MOCK_COLLEGES } from '../../data/mockData';
 
 export const Navbar = () => {
   const { 
@@ -22,22 +22,21 @@ export const Navbar = () => {
     switchPersona, 
     searchQuery, 
     setSearchQuery, 
-    selectedCollege, 
-    setSelectedCollege,
     setIsAuthOpen, 
     setIsCreateListingOpen, 
     setIsProfileOpen,
     setActiveChat,
     conversations,
     theme,
-    toggleTheme
+    toggleTheme,
+    handleLogout
   } = useApp();
 
   const [isPersonaMenuOpen, setIsPersonaMenuOpen] = useState(false);
 
-  const activeUserConversations = conversations.filter(
+  const activeUserConversations = currentUser ? conversations.filter(
     c => c.buyer_id === currentUser.id || c.seller_id === currentUser.id
-  );
+  ) : [];
 
   return (
     <nav className="navbar">
@@ -115,125 +114,160 @@ export const Navbar = () => {
             )}
           </button>
 
-          {/* Sandbox Persona Quick Switcher Dropdown */}
-          <div style={{ position: 'relative' }}>
-            <button
-              className="btn btn-secondary"
-              onClick={() => setIsPersonaMenuOpen(!isPersonaMenuOpen)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.75rem' }}
-            >
-              <img 
-                src={currentUser.avatar_url} 
-                alt={currentUser.full_name} 
-                style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover' }} 
-              />
-              <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{currentUser.full_name.split(' ')[0]}</span>
-              <ChevronDown size={14} />
-            </button>
+          {/* User Profile & Log Out Menu */}
+          {currentUser ? (
+            <div style={{ position: 'relative' }}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setIsPersonaMenuOpen(!isPersonaMenuOpen)}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.75rem' }}
+              >
+                <img 
+                  src={currentUser.avatar_url} 
+                  alt={currentUser.full_name} 
+                  style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover' }} 
+                />
+                <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{currentUser.full_name.split(' ')[0]}</span>
+                <ChevronDown size={14} />
+              </button>
 
-            {isPersonaMenuOpen && (
-              <div style={{
-                position: 'absolute',
-                top: '110%',
-                right: 0,
-                zIndex: 50,
-                backgroundColor: 'var(--bg-card)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: 'var(--shadow-lg)',
-                width: '260px',
-                padding: '0.6rem'
-              }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', padding: '0.3rem 0.5rem', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  <Sparkles size={12} color="var(--primary)" /> Switch Student Persona
-                </div>
+              {isPersonaMenuOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: '110%',
+                  right: 0,
+                  zIndex: 50,
+                  backgroundColor: 'var(--bg-card)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: 'var(--shadow-lg)',
+                  width: '260px',
+                  padding: '0.6rem'
+                }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', padding: '0.3rem 0.5rem', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <Sparkles size={12} color="var(--primary)" /> Switch Student Persona
+                  </div>
 
-                {allStudents.map(student => (
+                  {allStudents.map(student => (
+                    <button
+                      key={student.id}
+                      onClick={() => {
+                        switchPersona(student.id);
+                        setIsPersonaMenuOpen(false);
+                      }}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '0.55rem',
+                        borderRadius: 'var(--radius-sm)',
+                        border: 'none',
+                        backgroundColor: currentUser.id === student.id ? 'var(--primary-light)' : 'transparent',
+                        color: 'var(--text-main)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.6rem',
+                        marginBottom: '0.2rem'
+                      }}
+                    >
+                      <img 
+                        src={student.avatar_url} 
+                        alt={student.full_name} 
+                        style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} 
+                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{student.full_name}</span>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.major}</span>
+                      </div>
+                    </button>
+                  ))}
+
+                  <div style={{ borderTop: '1px solid var(--border-color)', margin: '0.4rem 0' }}></div>
+
                   <button
-                    key={student.id}
                     onClick={() => {
-                      switchPersona(student.id);
+                      setIsProfileOpen(true);
                       setIsPersonaMenuOpen(false);
                     }}
                     style={{
                       width: '100%',
                       textAlign: 'left',
-                      padding: '0.55rem',
+                      padding: '0.5rem',
                       borderRadius: 'var(--radius-sm)',
                       border: 'none',
-                      backgroundColor: currentUser.id === student.id ? 'var(--primary-light)' : 'transparent',
+                      backgroundColor: 'transparent',
                       color: 'var(--text-main)',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.6rem',
-                      marginBottom: '0.2rem'
+                      gap: '0.5rem'
                     }}
                   >
-                    <img 
-                      src={student.avatar_url} 
-                      alt={student.full_name} 
-                      style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} 
-                    />
-                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{student.full_name}</span>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.major}</span>
-                    </div>
+                    <User size={15} /> View My Profile & Listings
                   </button>
-                ))}
 
-                <div style={{ borderTop: '1px solid var(--border-color)', margin: '0.4rem 0' }}></div>
+                  <button
+                    onClick={() => {
+                      setIsAuthOpen(true);
+                      setIsPersonaMenuOpen(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '0.5rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: 'none',
+                      backgroundColor: 'transparent',
+                      color: 'var(--primary)',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <ShieldCheck size={15} /> Student Verification / Login
+                  </button>
 
-                <button
-                  onClick={() => {
-                    setIsProfileOpen(true);
-                    setIsPersonaMenuOpen(false);
-                  }}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: '0.5rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: 'none',
-                    backgroundColor: 'transparent',
-                    color: 'var(--text-main)',
-                    fontWeight: 600,
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  <User size={15} /> View My Profile & Listings
-                </button>
-
-                <button
-                  onClick={() => {
-                    setIsAuthOpen(true);
-                    setIsPersonaMenuOpen(false);
-                  }}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: '0.5rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: 'none',
-                    backgroundColor: 'transparent',
-                    color: 'var(--primary)',
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  <ShieldCheck size={15} /> Student Verification / Login
-                </button>
-              </div>
-            )}
-          </div>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsPersonaMenuOpen(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '0.5rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: 'none',
+                      backgroundColor: '#7f1d1d',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      marginTop: '0.35rem'
+                    }}
+                  >
+                    <LogOut size={15} /> Log Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button 
+              className="btn btn-primary btn-sm"
+              onClick={() => setIsAuthOpen(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <LogIn size={15} /> Sign In (@thapar.edu)
+            </button>
+          )}
 
           {/* Light/Dark Mode Toggle */}
           <button 

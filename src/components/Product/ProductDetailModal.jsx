@@ -33,8 +33,8 @@ export const ProductDetailModal = () => {
   if (!activeProductDetail) return null;
 
   const product = activeProductDetail;
-  const isOwner = currentUser.id === product.seller_id;
-  const seller = allStudents.find(s => s.id === product.seller_id) || currentUser;
+  const isOwner = currentUser?.id === product.seller_id;
+  const seller = allStudents.find(s => s.id === product.seller_id) || currentUser || {};
   const sellerReviews = reviews.filter(r => r.reviewee_id === seller.id);
 
   const images = product.images && product.images.length > 0 
