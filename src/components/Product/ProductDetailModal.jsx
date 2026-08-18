@@ -6,7 +6,7 @@ import {
   Star, 
   MessageSquare, 
   ShieldCheck, 
-  DollarSign, 
+  IndianRupee, 
   Edit3, 
   Trash2, 
   CheckCircle2, 
@@ -33,8 +33,8 @@ export const ProductDetailModal = () => {
   if (!activeProductDetail) return null;
 
   const product = activeProductDetail;
-  const isOwner = currentUser.id === product.seller_id;
-  const seller = allStudents.find(s => s.id === product.seller_id) || currentUser;
+  const isOwner = currentUser?.id === product.seller_id;
+  const seller = allStudents.find(s => s.id === product.seller_id) || currentUser || {};
   const sellerReviews = reviews.filter(r => r.reviewee_id === seller.id);
 
   const images = product.images && product.images.length > 0 
@@ -151,11 +151,11 @@ export const ProductDetailModal = () => {
             <div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.6rem', marginBottom: '0.4rem' }}>
                 <span style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary)' }}>
-                  ${product.price.toFixed(2)}
+                  ₹{product.price.toFixed(2)}
                 </span>
                 {product.original_price && (
                   <span style={{ fontSize: '1rem', color: 'var(--text-light)', textDecoration: 'line-through' }}>
-                    ${product.original_price.toFixed(2)}
+                    ₹{product.original_price.toFixed(2)}
                   </span>
                 )}
                 <span className={`condition-badge condition-${product.condition.toLowerCase().replace(' ', '-')}`} style={{ position: 'static', marginLeft: 'auto' }}>
@@ -251,7 +251,7 @@ export const ProductDetailModal = () => {
                       startOrOpenChat(product);
                     }}
                   >
-                    <DollarSign size={18} />
+                    <IndianRupee size={18} />
                     <span>Make an Offer</span>
                   </button>
                 </>

@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { 
   X, 
   Send, 
-  DollarSign, 
+  IndianRupee, 
   MapPin, 
   CheckCircle2, 
   ShieldCheck, 
@@ -22,7 +22,8 @@ export const ChatModal = () => {
     currentUser, 
     allStudents, 
     rawListings,
-    markListingStatus
+    markListingStatus,
+    switchPersona
   } = useApp();
 
   const [messageInput, setMessageInput] = useState('');
@@ -67,7 +68,7 @@ export const ChatModal = () => {
     const offerVal = parseFloat(offerPriceInput);
     if (!offerVal || isNaN(offerVal)) return;
 
-    const offerMsg = `Proposed Price Offer: $${offerVal.toFixed(2)} with pickup at ${selectedMeetupSpot}`;
+    const offerMsg = `Proposed Price Offer: ₹${offerVal.toFixed(2)} with pickup at ${selectedMeetupSpot}`;
     sendMessage(conversation.id, offerMsg, offerVal, selectedMeetupSpot);
     setOfferPriceInput('');
     setShowOfferWidget(false);
@@ -175,8 +176,12 @@ export const ChatModal = () => {
                   <span>{otherUser.full_name}</span>
                   <ShieldCheck size={14} color="var(--primary)" title="Verified Campus Student" />
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  {isSeller ? 'Buyer' : 'Seller'} • {otherUser.dorm_block || 'Stanford Campus'}
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span>{isSeller ? 'Buyer' : 'Seller'} • {otherUser.dorm_block || 'Thapar Campus'}</span>
+                  <span style={{ fontSize: '0.68rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: 700 }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
+                    Live Realtime
+                  </span>
                 </div>
               </div>
             </div>
@@ -195,7 +200,7 @@ export const ChatModal = () => {
                 {product.title}
               </span>
               <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '0.88rem' }}>
-                ${product.price?.toFixed(2)}
+                ₹{product.price?.toFixed(2)}
               </span>
 
               {isSeller && product.status === 'available' && (
@@ -209,9 +214,21 @@ export const ChatModal = () => {
               )}
             </div>
 
-            <button className="modal-close-btn" onClick={() => setActiveChat(null)}>
-              <X size={20} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button 
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => switchPersona(otherUser.id)}
+                title={`Switch active account to ${otherUser.full_name} to test sending a reply`}
+                style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem' }}
+              >
+                Test as {otherUser.full_name.split(' ')[0]}
+              </button>
+
+              <button className="modal-close-btn" onClick={() => setActiveChat(null)}>
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           {/* Messages Stream */}
@@ -277,7 +294,7 @@ export const ChatModal = () => {
                         fontSize: '0.85rem'
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                          <DollarSign size={16} /> Offer Amount: ${msg.offer_price.toFixed(2)}
+                          <IndianRupee size={16} /> Offer Amount: ₹{msg.offer_price.toFixed(2)}
                         </div>
                         {msg.meetup_spot && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem', fontSize: '0.78rem' }}>
@@ -321,12 +338,12 @@ export const ChatModal = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
-                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Offer Amount ($)</label>
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Offer Amount (₹)</label>
                   <input 
                     type="number"
                     step="1"
                     className="form-input"
-                    placeholder={`Original $${product.price}`}
+                    placeholder={`Original ₹${product.price}`}
                     value={offerPriceInput}
                     onChange={(e) => setOfferPriceInput(e.target.value)}
                     style={{ padding: '0.45rem 0.75rem' }}
@@ -376,7 +393,7 @@ export const ChatModal = () => {
               onClick={() => setShowOfferWidget(!showOfferWidget)}
               title="Make counter offer"
             >
-              <DollarSign size={16} color="var(--primary)" />
+              <IndianRupee size={16} color="var(--primary)" />
               <span style={{ fontSize: '0.8rem' }}>Offer</span>
             </button>
 

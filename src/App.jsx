@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { LandingPage } from './components/Landing/LandingPage';
 import { Navbar } from './components/Common/Navbar';
@@ -50,7 +50,11 @@ const MarketplaceView = ({ onBackToLanding }) => {
           </button>
 
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700 }}>
-            Logged in as: <strong style={{ color: 'var(--text-main)' }}>{currentUser.full_name}</strong> ({currentUser.email})
+            {currentUser ? (
+              <>Logged in as: <strong style={{ color: 'var(--text-main)' }}>{currentUser.full_name}</strong> ({currentUser.email})</>
+            ) : (
+              <span style={{ color: 'var(--text-muted)' }}>Not Signed In • Click "Sign In" to access full marketplace features</span>
+            )}
           </div>
         </div>
 
@@ -220,16 +224,42 @@ const MarketplaceView = ({ onBackToLanding }) => {
   );
 };
 
-export default function App() {
-  const [viewMode, setViewMode] = useState('landing'); // 'landing' or 'marketplace'
+const MainRouter = () => {
+  const { currentUser } = useApp();
+  const [viewMode, setViewMode] = useState(() => {
+    const savedView = localStorage.getItem('notolx_view_mode');
+    if (savedView) return savedView;
+    const savedUser = localStorage.getItem('notolx_current_user');
+    return savedUser ? 'marketplace' : 'landing';
+  });
+
+  useEffect(() => {
+    if (!currentUser) {
+      setViewMode('landing');
+      localStorage.setItem('notolx_view_mode', 'landing');
+    }
+  }, [currentUser]);
+
+  const handleSetView = (mode) => {
+    setViewMode(mode);
+    localStorage.setItem('notolx_view_mode', mode);
+  };
 
   return (
-    <AppProvider>
-      {viewMode === 'landing' ? (
-        <LandingPage onExploreMarketplace={() => setViewMode('marketplace')} />
+    <>
+      {viewMode === 'landing' || !currentUser ? (
+        <LandingPage onExploreMarketplace={() => handleSetView('marketplace')} />
       ) : (
-        <MarketplaceView onBackToLanding={() => setViewMode('landing')} />
+        <MarketplaceView onBackToLanding={() => handleSetView('landing')} />
       )}
+    </>
+  );
+};
+
+export default function App() {
+  return (
+    <AppProvider>
+      <MainRouter />
     </AppProvider>
   );
 }

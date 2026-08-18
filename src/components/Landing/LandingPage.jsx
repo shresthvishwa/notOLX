@@ -10,7 +10,7 @@ import {
   MessageSquare, 
   Star, 
   CheckCircle2, 
-  DollarSign, 
+  IndianRupee, 
   MapPin,
   ChevronRight,
   Sun,
@@ -312,7 +312,7 @@ export const LandingPage = ({ onExploreMarketplace }) => {
               </div>
               <div className="card-body">
                 <div className="card-price-row">
-                  <span className="card-price">${item.price.toFixed(2)}</span>
+                  <span className="card-price">₹{item.price.toFixed(2)}</span>
                 </div>
                 <h3 className="card-title">{item.title}</h3>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 'auto' }}>
