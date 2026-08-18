@@ -1,0 +1,142 @@
+{
+  "students": [
+    {
+      "id": "usr_1",
+      "email": "shresth.vishwakarma@thapar.edu",
+      "full_name": "Shresth Vishwakarma",
+      "college_name": "Thapar Institute of Engineering & Technology",
+      "college_id": "TU-2024-101",
+      "avatar_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+      "dorm_block": "Hostel J (Rm 314)",
+      "major": "Computer Science Engineering (3rd Year)",
+      "rating_avg": 4.9,
+      "rating_count": 14,
+      "verified": true
+    },
+    {
+      "id": "usr_2",
+      "email": "aditya.salwan@thapar.edu",
+      "full_name": "Aditya Salwan",
+      "college_name": "Thapar Institute of Engineering & Technology",
+      "college_id": "TU-2024-102",
+      "avatar_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80",
+      "dorm_block": "Hostel M (Rm 204)",
+      "major": "Electronics & Computer Engineering",
+      "rating_avg": 5.0,
+      "rating_count": 9,
+      "verified": true
+    },
+    {
+      "id": "usr_3",
+      "email": "nishchay.goyal@thapar.edu",
+      "full_name": "Nishchay Goyal",
+      "college_name": "Thapar Institute of Engineering & Technology",
+      "college_id": "TU-2024-103",
+      "avatar_url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80",
+      "dorm_block": "Hostel B (Rm 112)",
+      "major": "Mechanical Engineering",
+      "rating_avg": 4.8,
+      "rating_count": 21,
+      "verified": true
+    }
+  ],
+  "listings": [
+    {
+      "id": "prod_101",
+      "seller_id": "usr_2",
+      "title": "Casio FX-991EX Classwiz Non-Programmable Calculator",
+      "description": "Essential calculator for engineering maths & circuit analysis courses at TIET. Solar + battery powered, high-res display. Works perfectly for end-sem exams.",
+      "price": 45.00,
+      "original_price": 95.00,
+      "category": "calculators",
+      "condition": "Like New",
+      "images": [
+        "https://images.unsplash.com/photo-1611125832047-1d7ad1e8e48e?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1594980596870-8aa52a78d8cd?auto=format&fit=crop&w=800&q=80"
+      ],
+      "campus_location": "Hostel M / COS Canteen",
+      "status": "available",
+      "views_count": 54,
+      "created_at": "2026-08-15T10:30:00Z"
+    },
+    {
+      "id": "prod_102",
+      "seller_id": "usr_3",
+      "title": "Hero Sprint 21-Speed Gear Bicycle",
+      "description": "Perfect cycle for commuting between hostels, COS, and academic blocks across campus. Includes front basket, LED night light, and heavy-duty combination lock.",
+      "price": 120.00,
+      "original_price": 320.00,
+      "category": "cycles",
+      "condition": "Good",
+      "images": [
+        "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?auto=format&fit=crop&w=800&q=80"
+      ],
+      "campus_location": "Hostel B / Main Gate 1",
+      "status": "available",
+      "views_count": 98,
+      "created_at": "2026-08-16T14:15:00Z"
+    },
+    {
+      "id": "prod_103",
+      "seller_id": "usr_1",
+      "title": "Data Structures & Algorithms in C++ (4th Ed) - Weiss",
+      "description": "Standard textbook used in CSE 2nd year. Includes handwritten tutorial notes, solved lab assignment code snippets, and end-sem exam question papers attached!",
+      "price": 30.00,
+      "original_price": 85.00,
+      "category": "textbooks",
+      "condition": "Excellent",
+      "images": [
+        "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80"
+      ],
+      "campus_location": "Hostel J / Central Library",
+      "status": "available",
+      "views_count": 42,
+      "created_at": "2026-08-14T09:00:00Z"
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv_1",
+      "product_id": "prod_101",
+      "buyer_id": "usr_1",
+      "seller_id": "usr_2",
+      "last_message": "Is $40 okay if I pick it up at COS Canteen?",
+      "updated_at": "2026-08-17T12:00:00Z",
+      "messages": [
+        {
+          "id": "msg_1",
+          "sender_id": "usr_1",
+          "content": "Hi Aditya! Is the Casio calculator still available?",
+          "created_at": "2026-08-17T11:30:00Z"
+        },
+        {
+          "id": "msg_2",
+          "sender_id": "usr_2",
+          "content": "Hey Shresth! Yes it is. Works great for end-sem maths exams.",
+          "created_at": "2026-08-17T11:42:00Z"
+        },
+        {
+          "id": "msg_3",
+          "sender_id": "usr_1",
+          "content": "Awesome! Would you accept $40 for a quick meetup at COS Canteen?",
+          "offer_price": 40.00,
+          "meetup_spot": "COS (Center of Studies) Canteen",
+          "created_at": "2026-08-17T12:00:00Z"
+        }
+      ]
+    }
+  ],
+  "reviews": [
+    {
+      "id": "rev_1",
+      "product_id": "prod_99",
+      "reviewer_id": "usr_1",
+      "reviewee_id": "usr_2",
+      "rating": 5,
+      "comment": "Aditya was super punctual at COS Canteen and the scientific calculator was in pristine condition!",
+      "tags": ["Punctual", "Item as described", "Fair price"],
+      "created_at": "2026-08-10T16:20:00Z"
+    }
+  ]
+}
