@@ -224,6 +224,7 @@ export const AppProvider = ({ children }) => {
     }
     setCurrentUser(null);
     localStorage.removeItem('notolx_current_user');
+    localStorage.setItem('notolx_view_mode', 'landing');
     addToast('Signed out of Thapar Marketplace.', 'info');
   };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { LandingPage } from './components/Landing/LandingPage';
 import { Navbar } from './components/Common/Navbar';
@@ -233,6 +233,13 @@ const MainRouter = () => {
     return savedUser ? 'marketplace' : 'landing';
   });
 
+  useEffect(() => {
+    if (!currentUser) {
+      setViewMode('landing');
+      localStorage.setItem('notolx_view_mode', 'landing');
+    }
+  }, [currentUser]);
+
   const handleSetView = (mode) => {
     setViewMode(mode);
     localStorage.setItem('notolx_view_mode', mode);
@@ -240,7 +247,7 @@ const MainRouter = () => {
 
   return (
     <>
-      {viewMode === 'landing' ? (
+      {viewMode === 'landing' || !currentUser ? (
         <LandingPage onExploreMarketplace={() => handleSetView('marketplace')} />
       ) : (
         <MarketplaceView onBackToLanding={() => handleSetView('landing')} />
