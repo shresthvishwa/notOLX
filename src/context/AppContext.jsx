@@ -98,6 +98,17 @@ export const AppProvider = ({ children }) => {
     }, 4000);
   };
 
+  // View Mode State (Landing vs Marketplace)
+  const [viewMode, setViewModeState] = useState(() => {
+    const saved = localStorage.getItem('notolx_view_mode');
+    return saved || 'landing';
+  });
+
+  const setViewMode = (mode) => {
+    setViewModeState(mode);
+    localStorage.setItem('notolx_view_mode', mode);
+  };
+
   // Sync state to LocalStorage for persistence across reloads
   useEffect(() => {
     localStorage.setItem('notolx_current_user', JSON.stringify(currentUser));
@@ -178,21 +189,23 @@ export const AppProvider = ({ children }) => {
     return () => window.removeEventListener('storage', handleStorageSync);
   }, []);
 
-  // Supabase Auth Listener for Google OAuth (@thapar.edu domain policy enforcement)
+  // Supabase Auth Listener for Google OAuth (@thapar.edu domain policy enforcement & automatic redirection)
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user) {
         const userEmail = session.user.email || '';
         if (!isThaparEmail(userEmail)) {
           // Reject non @thapar.edu accounts immediately
           await supabase.auth.signOut();
           addToast('Access Denied: Only @thapar.edu email accounts are permitted on notOLX.', 'error');
           setIsAuthOpen(true);
+          setViewMode('landing');
         } else {
-          // Successfully logged in via @thapar.edu Google account
+          // Successfully logged in via @thapar.edu Google account - redirect to main marketplace
           handleLogin(userEmail);
+          setViewMode('marketplace');
         }
       }
     });
@@ -266,6 +279,29 @@ export const AppProvider = ({ children }) => {
   };
 
   // Authentication Handlers
+  const signInWithGoogle = async () => {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin,
+            queryParams: {
+              hd: 'thapar.edu' // Google Hosted Domain restriction strictly for @thapar.edu
+            }
+          }
+        });
+        if (error) {
+          addToast(`Google Sign-In Error: ${error.message}`, 'error');
+        }
+      } catch (err) {
+        addToast(`Google Auth Exception: ${err.message}`, 'error');
+      }
+    } else {
+      setIsAuthOpen(true);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       if (isSupabaseConfigured && supabase) {
@@ -278,6 +314,31 @@ export const AppProvider = ({ children }) => {
     localStorage.removeItem('notolx_current_user');
     localStorage.setItem('notolx_view_mode', 'landing');
     addToast('Signed out of Thapar Marketplace.', 'info');
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!currentUser) return;
+    const userId = currentUser.id;
+
+    try {
+      if (isSupabaseConfigured && supabase) {
+        await supabase.from('listings').delete().eq('seller_id', userId);
+        await supabase.from('profiles').delete().eq('id', userId);
+        await supabase.auth.signOut();
+      }
+    } catch (err) {
+      console.error('Supabase account deletion error:', err);
+    }
+
+    setAllStudents(prev => prev.filter(s => s.id !== userId));
+    setListings(prev => prev.filter(l => l.seller_id !== userId));
+    setConversations(prev => prev.filter(c => c.buyer_id !== userId && c.seller_id !== userId));
+    
+    setCurrentUser(null);
+    setIsProfileOpen(false);
+    localStorage.removeItem('notolx_current_user');
+    setViewMode('landing');
+    addToast('Your student account and active listings have been permanently deleted.', 'info');
   };
 
   const handleLogin = (email) => {
@@ -600,7 +661,11 @@ export const AppProvider = ({ children }) => {
         allStudents,
         switchPersona,
         handleLogin,
+        signInWithGoogle,
         handleLogout,
+        handleDeleteAccount,
+        viewMode,
+        setViewMode,
         selectedCollege,
         setSelectedCollege,
         isAuthOpen,

@@ -112,7 +112,7 @@ export const LandingPage = ({ onExploreMarketplace }) => {
           boxShadow: 'var(--shadow-sm)'
         }}>
           <ShieldCheck size={16} color="var(--noir-silver)" />
-          <span>THAPAR INSTITUTE EXCLUSIVE • @THAPAR.EDU</span>
+          <span>THAPAR UNIVERSITY EXCLUSIVE</span>
         </div>
 
         <h1 style={{
@@ -133,7 +133,7 @@ export const LandingPage = ({ onExploreMarketplace }) => {
           maxWidth: '680px',
           lineHeight: 1.6
         }}>
-          Buy & sell used Casio calculators, DSA textbooks, gear bikes, dorm appliances, and lab coats safely within the TIET campus. Restricted strictly to verified <strong>@thapar.edu</strong> accounts.
+          The Verified Student Marketplace for Thapar University. Buy and sell campus essentials—from textbooks to electronics—exclusively with verified <strong>@thapar.edu</strong> accounts.
         </p>
 
         {/* Primary CTA Button: Sign In with Google */}
@@ -166,161 +166,74 @@ export const LandingPage = ({ onExploreMarketplace }) => {
           </span>
         </div>
 
-        {/* 3 Initial Demo Student Accounts Quick Login Banner */}
-        <div style={{
-          marginTop: '3rem',
-          width: '100%',
-          maxWidth: '900px',
-          padding: '1.5rem',
-          backgroundColor: 'var(--bg-card)',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border-color)',
-          textAlign: 'left'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Instant Demo Sign-In (Initial Thapar Students)
-            </span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              1-Click Account Switcher
-            </span>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-            {allStudents.map(student => (
-              <div 
-                key={student.id}
-                onClick={() => handleQuickDemoClick(student.id)}
-                style={{
-                  padding: '1rem',
-                  borderRadius: 'var(--radius-md)',
-                  backgroundColor: 'var(--bg-input)',
-                  border: '1px solid var(--border-color)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.85rem'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--text-main)';
-                  e.currentTarget.style.backgroundColor = 'var(--border-color)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border-color)';
-                  e.currentTarget.style.backgroundColor = 'var(--bg-input)';
-                }}
-              >
-                <img 
-                  src={student.avatar_url} 
-                  alt={student.full_name} 
-                  style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border-color)' }}
-                />
-
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-main)' }}>
-                    {student.full_name}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {student.email}
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                    {student.major}
-                  </div>
-                </div>
-
-                <ChevronRight size={16} color="var(--text-main)" />
-              </div>
-            ))}
-          </div>
-        </div>
-
       </section>
 
-      {/* Feature Pillars Grid */}
+      {/* Feature Pillars Grid (Boxed) */}
       <section style={{
-        padding: '3rem 1.5rem',
+        padding: '2.5rem 1.5rem',
         backgroundColor: 'var(--bg-card)',
         borderTop: '1px solid var(--border-color)',
         borderBottom: '1px solid var(--border-color)'
       }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '2rem' }}>
+        <div style={{ maxWidth: '950px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ShieldCheck size={24} color="var(--noir-silver)" />
+          <div style={{
+            padding: '1.25rem',
+            backgroundColor: 'var(--bg-input)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-color)',
+            boxShadow: 'var(--shadow-sm)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem'
+          }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ShieldCheck size={18} color="var(--noir-silver)" />
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--noir-silver)' }}>100% Verified TIET Students</h3>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>100% Verified TIET Students</h3>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.45, margin: 0 }}>
               Strict Google OAuth email authentication. Only students holding an active `@thapar.edu` account can publish or purchase.
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MessageSquare size={24} color="var(--noir-silver)" />
+          <div style={{
+            padding: '1.25rem',
+            backgroundColor: 'var(--bg-input)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-color)',
+            boxShadow: 'var(--shadow-sm)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem'
+          }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <MessageSquare size={18} color="var(--noir-silver)" />
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--noir-silver)' }}>Real-Time Offer Negotiation</h3>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>Real-Time Offer Negotiation</h3>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.45, margin: 0 }}>
               Chat 1-on-1 directly with sellers. Propose custom price counter-offers and set safe campus meetup locations.
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MapPin size={24} color="var(--noir-silver)" />
+          <div style={{
+            padding: '1.25rem',
+            backgroundColor: 'var(--bg-input)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-color)',
+            boxShadow: 'var(--shadow-sm)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem'
+          }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <MapPin size={18} color="var(--noir-silver)" />
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--noir-silver)' }}>Safe Campus Meetup Spots</h3>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>Safe Campus Meetup Spots</h3>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.45, margin: 0 }}>
               Trade conveniently at recognizable campus landmarks like COS Canteen, Nava Nalanda Library Plaza, and Hostel J.
             </p>
           </div>
 
-        </div>
-      </section>
-
-      {/* Live Campus Listings Teaser */}
-      <section style={{ padding: '4rem 1.5rem', maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.5rem' }}>
-          <div>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', fontWeight: 800, color: 'var(--noir-silver)' }}>
-              Recent Campus Listings
-            </h2>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-              Available right now from Thapar University students
-            </p>
-          </div>
-
-          <button 
-            className="btn btn-outline btn-sm"
-            onClick={() => setIsGoogleModalOpen(true)}
-          >
-            View All Marketplace Items
-          </button>
-        </div>
-
-        <div className="product-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
-          {MOCK_LISTINGS.slice(0, 4).map(item => (
-            <div 
-              key={item.id}
-              className="product-card"
-              onClick={() => setIsGoogleModalOpen(true)}
-            >
-              <div className="card-img-wrapper">
-                <img src={item.images[0]} alt={item.title} className="card-img" />
-                <span className="condition-badge condition-like-new">{item.condition}</span>
-              </div>
-              <div className="card-body">
-                <div className="card-price-row">
-                  <span className="card-price">₹{item.price.toFixed(2)}</span>
-                </div>
-                <h3 className="card-title">{item.title}</h3>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 'auto' }}>
-                  📍 {item.campus_location}
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
