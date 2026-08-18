@@ -1,41 +1,15 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, ShieldCheck, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { X, ShieldCheck, AlertCircle, ArrowRight } from 'lucide-react';
 
 export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
   const { handleLogin, allStudents } = useApp();
-  const [googleEmail, setGoogleEmail] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleGoogleSubmit = (e) => {
-    e.preventDefault();
-    const email = googleEmail.trim().toLowerCase();
-
-    if (!email.endsWith('@thapar.edu')) {
-      setErrorMsg('Google Sign-In Error: Only @thapar.edu email accounts are permitted on notOLX.');
-      return;
-    }
-
-    setErrorMsg('');
-    setIsSigningIn(true);
-
-    setTimeout(() => {
-      setIsSigningIn(false);
-      const success = handleLogin(email);
-      if (success) {
-        onClose();
-        if (onAuthenticated) onAuthenticated();
-      } else {
-        setErrorMsg('Only @thapar.edu accounts are permitted.');
-      }
-    }, 1000);
-  };
-
   const handleSelectPreVerified = (email) => {
-    setGoogleEmail(email);
     setErrorMsg('');
     setIsSigningIn(true);
     setTimeout(() => {
@@ -43,7 +17,7 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
       handleLogin(email);
       onClose();
       if (onAuthenticated) onAuthenticated();
-    }, 800);
+    }, 500);
   };
 
   return (
@@ -74,8 +48,8 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleGoogleSubmit} className="modal-body">
+        {/* Modal Body */}
+        <div className="modal-body">
           
           <div style={{
             padding: '0.75rem',
@@ -123,6 +97,7 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
                 <button
                   key={student.id}
                   type="button"
+                  disabled={isSigningIn}
                   onClick={() => handleSelectPreVerified(student.email)}
                   style={{
                     padding: '0.6rem 0.85rem',
@@ -153,30 +128,7 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
             </div>
           </div>
 
-          <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-light)', margin: '0.75rem 0' }}>
-            — or enter custom @thapar.edu Google email —
-          </div>
-
-          {/* Manual Google Email Input */}
-          <div className="form-group">
-            <input 
-              type="email"
-              className="form-input"
-              placeholder="yourname@thapar.edu"
-              value={googleEmail}
-              onChange={(e) => setGoogleEmail(e.target.value)}
-            />
-          </div>
-
-          <button 
-            type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem' }}
-            disabled={isSigningIn}
-          >
-            {isSigningIn ? 'Authenticating with Google...' : 'Continue to Thapar Marketplace'}
-          </button>
-        </form>
+        </div>
       </div>
     </div>
   );
