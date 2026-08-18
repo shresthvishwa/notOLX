@@ -132,35 +132,72 @@ export const AppProvider = ({ children }) => {
   }, [conversations, activeChat]);
 
   // Live Real-Time Message Polling Engine (Polls for live incoming messages when active chat modal is open)
+  // Dynamic API Base URL for Cross-Device / Cross-Network Server connections
+  const getApiBaseUrl = () => {
+    if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return window.location.origin;
+    }
+    return 'http://localhost:5000';
+  };
+
+  // Live Real-Time Message Polling Engine (Polls for live incoming messages when active chat modal is open)
   useEffect(() => {
     if (!activeChat) return;
 
     const syncLiveMessages = async () => {
-      // 1. Fetch from Express backend server if available
-      try {
-        const res = await fetch('http://localhost:5000/api/conversations');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.conversations && data.conversations.length > 0) {
-            setConversations(prev => {
-              // Merge remote server conversations with local state
-              const merged = [...prev];
-              data.conversations.forEach(remote => {
-                const idx = merged.findIndex(c => c.id === remote.id);
-                if (idx !== -1) {
-                  if (remote.messages.length > merged[idx].messages.length) {
-                    merged[idx] = remote;
-                  }
-                } else {
-                  merged.unshift(remote);
-                }
-              });
-              return merged;
-            });
+      // 1. Fetch from Supabase if active
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data: dbMsgs } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('conversation_id', activeChat.id)
+            .order('created_at', { ascending: true });
+
+          if (dbMsgs && dbMsgs.length > 0) {
+            setConversations(prev => prev.map(c => {
+              if (c.id === activeChat.id) {
+                return { 
+                  ...c, 
+                  messages: dbMsgs, 
+                  last_message: dbMsgs[dbMsgs.length - 1].content,
+                  updated_at: dbMsgs[dbMsgs.length - 1].created_at || c.updated_at
+                };
+              }
+              return c;
+            }));
           }
+        } catch (err) {
+          console.warn('Supabase cross-device chat sync error:', err);
         }
-      } catch (err) {
-        // Fallback to storage sync
+      } else {
+        // 2. Fetch from Express backend server if available
+        try {
+          const apiUrl = `${getApiBaseUrl()}/api/conversations`;
+          const res = await fetch(apiUrl);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.conversations && data.conversations.length > 0) {
+              setConversations(prev => {
+                const merged = [...prev];
+                data.conversations.forEach(remote => {
+                  const idx = merged.findIndex(c => c.id === remote.id);
+                  if (idx !== -1) {
+                    if (remote.messages.length > merged[idx].messages.length) {
+                      merged[idx] = remote;
+                    }
+                  } else {
+                    merged.unshift(remote);
+                  }
+                });
+                return merged;
+              });
+            }
+          }
+        } catch (err) {
+          // Fallback to storage sync
+        }
       }
     };
 
@@ -197,13 +234,11 @@ export const AppProvider = ({ children }) => {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user) {
         const userEmail = session.user.email || '';
         if (!isThaparEmail(userEmail)) {
-          // Reject non @thapar.edu accounts immediately
           await supabase.auth.signOut();
           addToast('Access Denied: Only @thapar.edu email accounts are permitted on notOLX.', 'error');
           setIsAuthOpen(true);
           setViewMode('landing');
         } else {
-          // Successfully logged in via @thapar.edu Google account - redirect to main marketplace
           handleLogin(userEmail);
           setViewMode('marketplace');
         }
@@ -215,7 +250,7 @@ export const AppProvider = ({ children }) => {
     };
   }, []);
 
-  // Live Supabase Integration & Realtime Subscriptions (Active when .env contains credentials)
+  // Live Supabase Integration & Cross-Device Realtime Subscriptions (Active when .env contains credentials)
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
 
@@ -230,28 +265,84 @@ export const AppProvider = ({ children }) => {
         if (dbReviews && dbReviews.length > 0) {
           setReviews(dbReviews);
         }
+
+        // Fetch Conversations & Messages for Cross-Device Synchronization
+        const { data: dbConvs } = await supabase.from('conversations').select('*');
+        const { data: dbMsgs } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
+
+        if (dbConvs && dbConvs.length > 0) {
+          const structuredConvs = dbConvs.map(conv => {
+            const convMsgs = (dbMsgs || []).filter(m => m.conversation_id === conv.id);
+            return {
+              ...conv,
+              messages: convMsgs.length > 0 ? convMsgs : [
+                {
+                  id: `msg_init_${conv.id}`,
+                  sender_id: conv.buyer_id,
+                  receiver_id: conv.seller_id,
+                  content: conv.last_message || 'Hi, interested in this item!',
+                  status: 'sent',
+                  created_at: conv.created_at || new Date().toISOString()
+                }
+              ]
+            };
+          });
+
+          setConversations(prev => {
+            const merged = [...prev];
+            structuredConvs.forEach(remote => {
+              const idx = merged.findIndex(c => c.id === remote.id);
+              if (idx !== -1) {
+                merged[idx] = remote;
+              } else {
+                merged.unshift(remote);
+              }
+            });
+            return merged;
+          });
+        }
       } catch (err) {
-        console.warn('Supabase fetch error, fallback to sandbox store:', err);
+        console.warn('Supabase cross-device fetch warning, fallback to sandbox store:', err);
       }
     };
 
     fetchSupabaseData();
 
-    // Supabase Realtime subscription for live messages & listings
+    // Supabase Realtime subscription for cross-device live messages & listings
     const channel = supabase
       .channel('public:notolx_realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
         const newMsg = payload.new;
         setConversations(prev => prev.map(c => {
           if (c.id === newMsg.conversation_id) {
+            if (c.messages.some(m => m.id === newMsg.id)) return c;
             return {
               ...c,
               last_message: newMsg.content,
+              updated_at: newMsg.created_at || new Date().toISOString(),
               messages: [...c.messages, newMsg]
             };
           }
           return c;
         }));
+
+        if (activeChat && activeChat.id === newMsg.conversation_id) {
+          setActiveChat(prev => {
+            if (prev.messages.some(m => m.id === newMsg.id)) return prev;
+            return {
+              ...prev,
+              last_message: newMsg.content,
+              messages: [...prev.messages, newMsg]
+            };
+          });
+        }
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'conversations' }, payload => {
+        const newConv = payload.new;
+        setConversations(prev => {
+          if (prev.some(c => c.id === newConv.id)) return prev;
+          return [{ ...newConv, messages: newConv.messages || [] }, ...prev];
+        });
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, payload => {
         if (payload.eventType === 'INSERT') {
@@ -267,7 +358,7 @@ export const AppProvider = ({ children }) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [activeChat]);
 
   // Persona Switcher (For testing as Buyer or Seller)
   const switchPersona = (studentId) => {
@@ -523,7 +614,7 @@ export const AppProvider = ({ children }) => {
           if (error) console.error('Supabase conversation insert error:', error);
         });
       } else {
-        fetch('http://localhost:5000/api/conversations', {
+        fetch(`${getApiBaseUrl()}/api/conversations`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -632,7 +723,7 @@ export const AppProvider = ({ children }) => {
       }
     } else {
       try {
-        await fetch('http://localhost:5000/api/messages', {
+        await fetch(`${getApiBaseUrl()}/api/messages`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
