@@ -175,8 +175,12 @@ export const ChatModal = () => {
                   <span>{otherUser.full_name}</span>
                   <ShieldCheck size={14} color="var(--primary)" title="Verified Campus Student" />
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  {isSeller ? 'Buyer' : 'Seller'} • {otherUser.dorm_block || 'Stanford Campus'}
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span>{isSeller ? 'Buyer' : 'Seller'} • {otherUser.dorm_block || 'Thapar Campus'}</span>
+                  <span style={{ fontSize: '0.68rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: 700 }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
+                    Live Realtime
+                  </span>
                 </div>
               </div>
             </div>

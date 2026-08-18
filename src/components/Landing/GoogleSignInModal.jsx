@@ -1,21 +1,38 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, ShieldCheck, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { X, ShieldCheck, AlertCircle, ArrowRight, CheckCircle2, LogIn } from 'lucide-react';
+import { signInWithGoogle, isThaparEmail, isSupabaseConfigured } from '../../lib/supabase';
 
 export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
-  const { handleLogin, allStudents } = useApp();
+  const { handleLogin, allStudents, addToast } = useApp();
   const [googleEmail, setGoogleEmail] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   if (!isOpen) return null;
 
+  const handleOAuthLogin = async () => {
+    setErrorMsg('');
+    if (isSupabaseConfigured) {
+      setIsSigningIn(true);
+      const { error } = await signInWithGoogle();
+      if (error) {
+        setIsSigningIn(false);
+        setErrorMsg(error.message || 'Google OAuth Sign-In failed.');
+      }
+    } else {
+      // Prompt user to select/type their @thapar.edu email
+      setErrorMsg('Please enter your @thapar.edu Google email address below or select a student account.');
+    }
+  };
+
   const handleGoogleSubmit = (e) => {
     e.preventDefault();
     const email = googleEmail.trim().toLowerCase();
 
-    if (!email.endsWith('@thapar.edu')) {
-      setErrorMsg('Google Sign-In Error: Only @thapar.edu email accounts are permitted on notOLX.');
+    if (!isThaparEmail(email)) {
+      setErrorMsg('Access Denied: Only @thapar.edu Google email accounts are permitted on notOLX.');
+      addToast('Access Denied: Only @thapar.edu emails are allowed.', 'error');
       return;
     }
 
@@ -29,12 +46,16 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
         onClose();
         if (onAuthenticated) onAuthenticated();
       } else {
-        setErrorMsg('Only @thapar.edu accounts are permitted.');
+        setErrorMsg('Access Denied: Only @thapar.edu accounts are permitted.');
       }
-    }, 1000);
+    }, 600);
   };
 
   const handleSelectPreVerified = (email) => {
+    if (!isThaparEmail(email)) {
+      setErrorMsg('Access Denied: Only @thapar.edu Google email accounts are permitted.');
+      return;
+    }
     setGoogleEmail(email);
     setErrorMsg('');
     setIsSigningIn(true);
@@ -43,7 +64,7 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
       handleLogin(email);
       onClose();
       if (onAuthenticated) onAuthenticated();
-    }, 800);
+    }, 600);
   };
 
   return (
@@ -111,6 +132,37 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
               <span>{errorMsg}</span>
             </div>
           )}
+
+          {/* Primary Google OAuth Sign-In Button */}
+          <button
+            type="button"
+            onClick={handleOAuthLogin}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--noir-silver)',
+              backgroundColor: '#ffffff',
+              color: '#111827',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.6rem',
+              marginBottom: '1.25rem',
+              boxShadow: 'var(--shadow-sm)'
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
+              <path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.39l3.99-3.15z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.61l3.99 3.15c.95-2.85 3.6-4.96 6.72-4.96z"/>
+            </svg>
+            <span>Sign in with @thapar.edu Google Account</span>
+          </button>
 
           {/* Quick Select Demo Accounts */}
           <div style={{ marginBottom: '1.25rem' }}>

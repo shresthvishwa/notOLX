@@ -6,7 +6,7 @@ import {
   MOCK_REVIEWS, 
   MOCK_COLLEGES 
 } from '../data/mockData';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, isThaparEmail } from '../lib/supabase';
 import confetti from 'canvas-confetti';
 
 const AppContext = createContext();
@@ -97,11 +97,58 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('notolx_conversations', JSON.stringify(conversations));
-  }, [conversations]);
+    if (activeChat) {
+      const updatedActive = conversations.find(c => c.id === activeChat.id);
+      if (updatedActive && updatedActive.messages.length !== activeChat.messages.length) {
+        setActiveChat(updatedActive);
+      }
+    }
+  }, [conversations, activeChat]);
 
   useEffect(() => {
     localStorage.setItem('notolx_reviews', JSON.stringify(reviews));
   }, [reviews]);
+
+  // Real-Time Cross-Tab Live Messaging Listener (Syncs buyer/seller chat instantly across browser tabs/windows)
+  useEffect(() => {
+    const handleStorageSync = (e) => {
+      if (e.key === 'notolx_conversations' && e.newValue) {
+        try {
+          const updatedConvs = JSON.parse(e.newValue);
+          setConversations(updatedConvs);
+        } catch (err) {
+          console.error('Realtime chat sync parse error:', err);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageSync);
+    return () => window.removeEventListener('storage', handleStorageSync);
+  }, []);
+
+  // Supabase Auth Listener for Google OAuth (@thapar.edu domain policy enforcement)
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const userEmail = session.user.email || '';
+        if (!isThaparEmail(userEmail)) {
+          // Reject non @thapar.edu accounts immediately
+          await supabase.auth.signOut();
+          addToast('Access Denied: Only @thapar.edu email accounts are permitted on notOLX.', 'error');
+          setIsAuthOpen(true);
+        } else {
+          // Successfully logged in via @thapar.edu Google account
+          handleLogin(userEmail);
+        }
+      }
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, []);
 
   // Live Supabase Integration & Realtime Subscriptions (Active when .env contains credentials)
   useEffect(() => {
