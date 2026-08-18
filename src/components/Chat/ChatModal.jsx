@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { 
   X, 
   Send, 
-  DollarSign, 
+  IndianRupee, 
   MapPin, 
   CheckCircle2, 
   ShieldCheck, 
@@ -67,7 +67,7 @@ export const ChatModal = () => {
     const offerVal = parseFloat(offerPriceInput);
     if (!offerVal || isNaN(offerVal)) return;
 
-    const offerMsg = `Proposed Price Offer: $${offerVal.toFixed(2)} with pickup at ${selectedMeetupSpot}`;
+    const offerMsg = `Proposed Price Offer: ₹${offerVal.toFixed(2)} with pickup at ${selectedMeetupSpot}`;
     sendMessage(conversation.id, offerMsg, offerVal, selectedMeetupSpot);
     setOfferPriceInput('');
     setShowOfferWidget(false);
@@ -195,7 +195,7 @@ export const ChatModal = () => {
                 {product.title}
               </span>
               <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '0.88rem' }}>
-                ${product.price?.toFixed(2)}
+                ₹{product.price?.toFixed(2)}
               </span>
 
               {isSeller && product.status === 'available' && (
@@ -277,7 +277,7 @@ export const ChatModal = () => {
                         fontSize: '0.85rem'
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                          <DollarSign size={16} /> Offer Amount: ${msg.offer_price.toFixed(2)}
+                          <IndianRupee size={16} /> Offer Amount: ₹{msg.offer_price.toFixed(2)}
                         </div>
                         {msg.meetup_spot && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem', fontSize: '0.78rem' }}>
@@ -321,12 +321,12 @@ export const ChatModal = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
-                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Offer Amount ($)</label>
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Offer Amount (₹)</label>
                   <input 
                     type="number"
                     step="1"
                     className="form-input"
-                    placeholder={`Original $${product.price}`}
+                    placeholder={`Original ₹${product.price}`}
                     value={offerPriceInput}
                     onChange={(e) => setOfferPriceInput(e.target.value)}
                     style={{ padding: '0.45rem 0.75rem' }}
@@ -376,7 +376,7 @@ export const ChatModal = () => {
               onClick={() => setShowOfferWidget(!showOfferWidget)}
               title="Make counter offer"
             >
-              <DollarSign size={16} color="var(--primary)" />
+              <IndianRupee size={16} color="var(--primary)" />
               <span style={{ fontSize: '0.8rem' }}>Offer</span>
             </button>
 

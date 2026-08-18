@@ -316,7 +316,7 @@ export const AppProvider = ({ children }) => {
           {
             id: `msg_${Date.now()}`,
             sender_id: currentUser.id,
-            content: `Hi! Is your ${product.title} still available for $${product.price}?`,
+            content: `Hi! Is your ${product.title} still available for ₹${product.price}?`,
             created_at: new Date().toISOString()
           }
         ]
@@ -389,7 +389,7 @@ export const AppProvider = ({ children }) => {
       setTimeout(() => {
         let replyText = "Sounds good! I can meet you at " + (meetupSpot || "the Main Library Plaza");
         if (offerPrice) {
-          replyText = `$${offerPrice} works for me! Let's lock in the deal and meet at ${meetupSpot || 'Main Quad'}.`;
+          replyText = `₹${offerPrice} works for me! Let's lock in the deal and meet at ${meetupSpot || 'Main Quad'}.`;
         }
 
         const autoReply = {

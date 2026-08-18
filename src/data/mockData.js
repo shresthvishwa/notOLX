@@ -181,7 +181,7 @@ export const MOCK_CONVERSATIONS = [
     product_id: 'prod_101',
     buyer_id: 'usr_1', // Shresth Vishwakarma
     seller_id: 'usr_2', // Aditya Salwan
-    last_message: 'Is $40 okay if I pick it up at COS Canteen?',
+    last_message: 'Is ₹40 okay if I pick it up at COS Canteen?',
     updated_at: '2026-08-17T12:00:00Z',
     messages: [
       {
@@ -199,7 +199,7 @@ export const MOCK_CONVERSATIONS = [
       {
         id: 'msg_3',
         sender_id: 'usr_1',
-        content: 'Awesome! Would you accept $40 for a quick meetup at COS Canteen?',
+        content: 'Awesome! Would you accept ₹40 for a quick meetup at COS Canteen?',
         offer_price: 40.00,
         meetup_spot: 'COS (Center of Studies) Canteen',
         created_at: '2026-08-17T12:00:00Z'
