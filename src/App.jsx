@@ -224,16 +224,35 @@ const MarketplaceView = ({ onBackToLanding }) => {
   );
 };
 
-export default function App() {
-  const [viewMode, setViewMode] = useState('landing'); // 'landing' or 'marketplace'
+const MainRouter = () => {
+  const { currentUser } = useApp();
+  const [viewMode, setViewMode] = useState(() => {
+    const savedView = localStorage.getItem('notolx_view_mode');
+    if (savedView) return savedView;
+    const savedUser = localStorage.getItem('notolx_current_user');
+    return savedUser ? 'marketplace' : 'landing';
+  });
+
+  const handleSetView = (mode) => {
+    setViewMode(mode);
+    localStorage.setItem('notolx_view_mode', mode);
+  };
 
   return (
-    <AppProvider>
+    <>
       {viewMode === 'landing' ? (
-        <LandingPage onExploreMarketplace={() => setViewMode('marketplace')} />
+        <LandingPage onExploreMarketplace={() => handleSetView('marketplace')} />
       ) : (
-        <MarketplaceView onBackToLanding={() => setViewMode('landing')} />
+        <MarketplaceView onBackToLanding={() => handleSetView('landing')} />
       )}
+    </>
+  );
+};
+
+export default function App() {
+  return (
+    <AppProvider>
+      <MainRouter />
     </AppProvider>
   );
 }
