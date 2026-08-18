@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, ShieldCheck, Star, Package, LogOut } from 'lucide-react';
+import { X, ShieldCheck, Star, Package, LogOut, Trash2, AlertTriangle } from 'lucide-react';
 import { ProductCard } from '../Marketplace/ProductCard';
 
 export const ProfileModal = () => {
@@ -11,15 +11,22 @@ export const ProfileModal = () => {
     rawListings, 
     reviews,
     allStudents,
-    handleLogout
+    handleLogout,
+    handleDeleteAccount
   } = useApp();
 
   const [activeTab, setActiveTab] = useState('listings'); // 'listings' or 'reviews'
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (!isProfileOpen || !currentUser) return null;
 
   const userListings = rawListings.filter(item => item.seller_id === currentUser.id);
   const userReviews = reviews.filter(r => r.reviewee_id === currentUser.id);
+
+  const confirmAndDelete = () => {
+    handleDeleteAccount();
+    setShowDeleteConfirm(false);
+  };
 
   return (
     <div className="modal-overlay" onClick={() => setIsProfileOpen(false)}>
@@ -78,8 +85,8 @@ export const ProfileModal = () => {
               </div>
             </div>
 
-            {/* Rating & Log Out Box */}
-            <div style={{ textAlign: 'center', paddingLeft: '1rem', borderLeft: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+            {/* Rating & Account Actions Box */}
+            <div style={{ textAlign: 'center', paddingLeft: '1rem', borderLeft: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', minWidth: '130px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '1.3rem', fontWeight: 800, color: '#f59e0b', justifyContent: 'center' }}>
                   <Star size={20} fill="#f59e0b" />
@@ -90,18 +97,65 @@ export const ProfileModal = () => {
                 </div>
               </div>
 
-              <button
-                className="btn btn-danger btn-sm"
-                onClick={() => {
-                  handleLogout();
-                  setIsProfileOpen(false);
-                }}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', marginTop: '0.2rem' }}
-              >
-                <LogOut size={14} /> Log Out
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', width: '100%', marginTop: '0.2rem' }}>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    handleLogout();
+                    setIsProfileOpen(false);
+                  }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', fontSize: '0.78rem' }}
+                >
+                  <LogOut size={13} /> Log Out
+                </button>
+
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', fontSize: '0.78rem', backgroundColor: '#dc2626', color: '#ffffff' }}
+                >
+                  <Trash2 size={13} /> Delete Account
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* Delete Account Confirmation Dialog */}
+          {showDeleteConfirm && (
+            <div style={{
+              padding: '1rem 1.25rem',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'rgba(220, 38, 38, 0.1)',
+              border: '1px solid rgba(220, 38, 38, 0.3)',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', fontWeight: 800, fontSize: '0.92rem' }}>
+                <AlertTriangle size={18} />
+                <span>Delete Thapar Student Account ({currentUser.email})?</span>
+              </div>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-main)', margin: 0, lineHeight: 1.45 }}>
+                Are you sure you want to permanently delete your account? This action will immediately remove your profile, active item listings, and chat history.
+              </p>
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                <button 
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="btn btn-danger btn-sm"
+                  onClick={confirmAndDelete}
+                  style={{ backgroundColor: '#dc2626', color: '#ffffff' }}
+                >
+                  Confirm Delete Account
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Navigation Tabs */}
           <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '1.25rem' }}>

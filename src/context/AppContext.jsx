@@ -264,6 +264,31 @@ export const AppProvider = ({ children }) => {
     addToast('Signed out of Thapar Marketplace.', 'info');
   };
 
+  const handleDeleteAccount = async () => {
+    if (!currentUser) return;
+    const userId = currentUser.id;
+
+    try {
+      if (isSupabaseConfigured && supabase) {
+        await supabase.from('listings').delete().eq('seller_id', userId);
+        await supabase.from('profiles').delete().eq('id', userId);
+        await supabase.auth.signOut();
+      }
+    } catch (err) {
+      console.error('Supabase account deletion error:', err);
+    }
+
+    setAllStudents(prev => prev.filter(s => s.id !== userId));
+    setListings(prev => prev.filter(l => l.seller_id !== userId));
+    setConversations(prev => prev.filter(c => c.buyer_id !== userId && c.seller_id !== userId));
+    
+    setCurrentUser(null);
+    setIsProfileOpen(false);
+    localStorage.removeItem('notolx_current_user');
+    setViewMode('landing');
+    addToast('Your student account and active listings have been permanently deleted.', 'info');
+  };
+
   const handleLogin = (email) => {
     const cleanEmail = (email || '').trim().toLowerCase();
 
@@ -557,6 +582,7 @@ export const AppProvider = ({ children }) => {
         handleLogin,
         signInWithGoogle,
         handleLogout,
+        handleDeleteAccount,
         viewMode,
         setViewMode,
         selectedCollege,
