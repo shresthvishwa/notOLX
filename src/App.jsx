@@ -225,32 +225,14 @@ const MarketplaceView = ({ onBackToLanding }) => {
 };
 
 const MainRouter = () => {
-  const { currentUser } = useApp();
-  const [viewMode, setViewMode] = useState(() => {
-    const savedView = localStorage.getItem('notolx_view_mode');
-    if (savedView) return savedView;
-    const savedUser = localStorage.getItem('notolx_current_user');
-    return savedUser ? 'marketplace' : 'landing';
-  });
-
-  useEffect(() => {
-    if (!currentUser) {
-      setViewMode('landing');
-      localStorage.setItem('notolx_view_mode', 'landing');
-    }
-  }, [currentUser]);
-
-  const handleSetView = (mode) => {
-    setViewMode(mode);
-    localStorage.setItem('notolx_view_mode', mode);
-  };
+  const { currentUser, viewMode, setViewMode } = useApp();
 
   return (
     <>
       {viewMode === 'landing' || !currentUser ? (
-        <LandingPage onExploreMarketplace={() => handleSetView('marketplace')} />
+        <LandingPage onExploreMarketplace={() => setViewMode('marketplace')} />
       ) : (
-        <MarketplaceView onBackToLanding={() => handleSetView('landing')} />
+        <MarketplaceView onBackToLanding={() => setViewMode('landing')} />
       )}
     </>
   );

@@ -86,6 +86,17 @@ export const AppProvider = ({ children }) => {
     }, 4000);
   };
 
+  // View Mode State (Landing vs Marketplace)
+  const [viewMode, setViewModeState] = useState(() => {
+    const saved = localStorage.getItem('notolx_view_mode');
+    return saved || 'landing';
+  });
+
+  const setViewMode = (mode) => {
+    setViewModeState(mode);
+    localStorage.setItem('notolx_view_mode', mode);
+  };
+
   // Sync state to LocalStorage for persistence across reloads
   useEffect(() => {
     localStorage.setItem('notolx_current_user', JSON.stringify(currentUser));
@@ -126,21 +137,23 @@ export const AppProvider = ({ children }) => {
     return () => window.removeEventListener('storage', handleStorageSync);
   }, []);
 
-  // Supabase Auth Listener for Google OAuth (@thapar.edu domain policy enforcement)
+  // Supabase Auth Listener for Google OAuth (@thapar.edu domain policy enforcement & automatic redirection)
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user) {
         const userEmail = session.user.email || '';
         if (!isThaparEmail(userEmail)) {
           // Reject non @thapar.edu accounts immediately
           await supabase.auth.signOut();
           addToast('Access Denied: Only @thapar.edu email accounts are permitted on notOLX.', 'error');
           setIsAuthOpen(true);
+          setViewMode('landing');
         } else {
-          // Successfully logged in via @thapar.edu Google account
+          // Successfully logged in via @thapar.edu Google account - redirect to main marketplace
           handleLogin(userEmail);
+          setViewMode('marketplace');
         }
       }
     });
@@ -544,6 +557,8 @@ export const AppProvider = ({ children }) => {
         handleLogin,
         signInWithGoogle,
         handleLogout,
+        viewMode,
+        setViewMode,
         selectedCollege,
         setSelectedCollege,
         isAuthOpen,
