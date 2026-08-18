@@ -10,13 +10,10 @@ import {
   MessageSquare, 
   Star, 
   CheckCircle2, 
-  IndianRupee, 
-  MapPin,
   ChevronRight,
   Sun,
   Moon
 } from 'lucide-react';
-import { MOCK_LISTINGS } from '../../data/mockData';
 
 export const LandingPage = ({ onExploreMarketplace }) => {
   const { allStudents, switchPersona, handleLogin, theme, toggleTheme } = useApp();
@@ -276,51 +273,6 @@ export const LandingPage = ({ onExploreMarketplace }) => {
             </p>
           </div>
 
-        </div>
-      </section>
-
-      {/* Live Campus Listings Teaser */}
-      <section style={{ padding: '4rem 1.5rem', maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.5rem' }}>
-          <div>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', fontWeight: 800, color: 'var(--noir-silver)' }}>
-              Recent Campus Listings
-            </h2>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-              Available right now from Thapar University students
-            </p>
-          </div>
-
-          <button 
-            className="btn btn-outline btn-sm"
-            onClick={() => setIsGoogleModalOpen(true)}
-          >
-            View All Marketplace Items
-          </button>
-        </div>
-
-        <div className="product-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
-          {MOCK_LISTINGS.slice(0, 4).map(item => (
-            <div 
-              key={item.id}
-              className="product-card"
-              onClick={() => setIsGoogleModalOpen(true)}
-            >
-              <div className="card-img-wrapper">
-                <img src={item.images[0]} alt={item.title} className="card-img" />
-                <span className="condition-badge condition-like-new">{item.condition}</span>
-              </div>
-              <div className="card-body">
-                <div className="card-price-row">
-                  <span className="card-price">₹{item.price.toFixed(2)}</span>
-                </div>
-                <h3 className="card-title">{item.title}</h3>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 'auto' }}>
-                  📍 {item.campus_location}
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
