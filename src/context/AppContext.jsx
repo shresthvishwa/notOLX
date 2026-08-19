@@ -11,6 +11,19 @@ import confetti from 'canvas-confetti';
 
 const AppContext = createContext();
 
+// Helper to convert any string ID (e.g. 'usr_1', 'prod_101') to a valid PostgreSQL UUID format
+const toUuid = (idStr) => {
+  if (!idStr) return '00000000-0000-4000-8000-000000000001';
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(idStr)) return idStr;
+  let hex = '';
+  for (let i = 0; i < idStr.length; i++) {
+    hex += idStr.charCodeAt(i).toString(16);
+  }
+  hex = hex.padEnd(32, '0').slice(0, 32);
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-8${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+};
+
 export const AppProvider = ({ children }) => {
   // Current Authenticated / Active Student User
   const [currentUser, setCurrentUser] = useState(() => {
@@ -109,7 +122,7 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('notolx_reviews', JSON.stringify(reviews));
   }, [reviews]);
 
-  // Real-Time Cross-Tab Live Messaging Listener (Syncs buyer/seller chat instantly across browser tabs/windows)
+  // Real-Time Cross-Tab Live Messaging & Listing Listener (Syncs buyer/seller chat & items instantly across browser tabs/windows)
   useEffect(() => {
     const handleStorageSync = (e) => {
       if (e.key === 'notolx_conversations' && e.newValue) {
@@ -118,6 +131,14 @@ export const AppProvider = ({ children }) => {
           setConversations(updatedConvs);
         } catch (err) {
           console.error('Realtime chat sync parse error:', err);
+        }
+      }
+      if (e.key === 'notolx_listings' && e.newValue) {
+        try {
+          const updatedListings = JSON.parse(e.newValue);
+          setListings(updatedListings);
+        } catch (err) {
+          console.error('Realtime listings sync parse error:', err);
         }
       }
     };
@@ -156,9 +177,17 @@ export const AppProvider = ({ children }) => {
 
     const fetchSupabaseData = async () => {
       try {
-        const { data: dbListings } = await supabase.from('listings').select('*');
+        const { data: dbListings } = await supabase
+          .from('listings')
+          .select('*')
+          .order('created_at', { ascending: false });
+
         if (dbListings && dbListings.length > 0) {
-          setListings(dbListings);
+          setListings(prev => {
+            const dbIds = new Set(dbListings.map(item => item.id));
+            const localOnly = prev.filter(item => !dbIds.has(item.id) && !dbIds.has(toUuid(item.id)));
+            return [...dbListings, ...localOnly];
+          });
         }
 
         const { data: dbReviews } = await supabase.from('reviews').select('*');
@@ -190,7 +219,10 @@ export const AppProvider = ({ children }) => {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, payload => {
         if (payload.eventType === 'INSERT') {
-          setListings(prev => [payload.new, ...prev]);
+          setListings(prev => {
+            const exists = prev.some(l => l.id === payload.new.id);
+            return exists ? prev : [payload.new, ...prev];
+          });
         } else if (payload.eventType === 'UPDATE') {
           setListings(prev => prev.map(l => l.id === payload.new.id ? payload.new : l));
         } else if (payload.eventType === 'DELETE') {
@@ -274,9 +306,12 @@ export const AppProvider = ({ children }) => {
 
   // Listing Handlers (Create, Edit, Delete, Status Change)
   const addListing = async (listingData) => {
+    const rawId = `prod_${Date.now()}`;
+    const sellerId = currentUser?.id || 'usr_1';
+
     const newListing = {
-      id: `prod_${Date.now()}`,
-      seller_id: currentUser.id,
+      id: rawId,
+      seller_id: sellerId,
       title: listingData.title,
       description: listingData.description,
       price: parseFloat(listingData.price),
@@ -286,7 +321,7 @@ export const AppProvider = ({ children }) => {
       images: listingData.images && listingData.images.length > 0 
         ? listingData.images 
         : ['https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80'],
-      campus_location: listingData.campus_location || `${currentUser.dorm_block} / Main Quad`,
+      campus_location: listingData.campus_location || `${currentUser?.dorm_block || 'Hostel'} / Main Quad`,
       status: 'available',
       views_count: 1,
       created_at: new Date().toISOString()
@@ -298,7 +333,15 @@ export const AppProvider = ({ children }) => {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('listings').insert([newListing]);
+        const supabasePayload = {
+          ...newListing,
+          id: toUuid(rawId),
+          seller_id: toUuid(sellerId)
+        };
+        const { error } = await supabase.from('listings').insert([supabasePayload]);
+        if (error) {
+          console.warn('Supabase insert notice:', error.message);
+        }
       } catch (err) {
         console.warn('Supabase insert error:', err);
       }
@@ -315,7 +358,7 @@ export const AppProvider = ({ children }) => {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('listings').update(updatedFields).eq('id', id);
+        await supabase.from('listings').update(updatedFields).eq('id', toUuid(id));
       } catch (err) {
         console.warn('Supabase update error:', err);
       }
@@ -331,7 +374,7 @@ export const AppProvider = ({ children }) => {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('listings').delete().eq('id', id);
+        await supabase.from('listings').delete().eq('id', toUuid(id));
       } catch (err) {
         console.warn('Supabase delete error:', err);
       }
