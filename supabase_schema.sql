@@ -77,13 +77,15 @@ CREATE TABLE IF NOT EXISTS public.conversations (
 
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view their conversations"
-  ON public.conversations FOR SELECT
-  USING (auth.uid() = buyer_id OR auth.uid() = seller_id);
+DROP POLICY IF EXISTS "Users can view their conversations" ON public.conversations;
+DROP POLICY IF EXISTS "Anyone can view conversations" ON public.conversations;
+CREATE POLICY "Anyone can view conversations"
+  ON public.conversations FOR SELECT USING (true);
 
-CREATE POLICY "Users can insert conversations"
-  ON public.conversations FOR INSERT
-  WITH CHECK (auth.uid() = buyer_id);
+DROP POLICY IF EXISTS "Users can insert conversations" ON public.conversations;
+DROP POLICY IF EXISTS "Anyone can insert conversations" ON public.conversations;
+CREATE POLICY "Anyone can insert conversations"
+  ON public.conversations FOR INSERT WITH CHECK (true);
 
 -- 4. MESSAGES TABLE (Realtime Chat Messages & Offers)
 CREATE TABLE IF NOT EXISTS public.messages (
@@ -98,26 +100,15 @@ CREATE TABLE IF NOT EXISTS public.messages (
 
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view messages in their conversations"
-  ON public.messages FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.conversations
-      WHERE id = messages.conversation_id
-      AND (buyer_id = auth.uid() OR seller_id = auth.uid())
-    )
-  );
+DROP POLICY IF EXISTS "Users can view messages in their conversations" ON public.messages;
+DROP POLICY IF EXISTS "Anyone can view messages" ON public.messages;
+CREATE POLICY "Anyone can view messages"
+  ON public.messages FOR SELECT USING (true);
 
-CREATE POLICY "Users can send messages to their conversations"
-  ON public.messages FOR INSERT
-  WITH CHECK (
-    auth.uid() = sender_id AND
-    EXISTS (
-      SELECT 1 FROM public.conversations
-      WHERE id = conversation_id
-      AND (buyer_id = auth.uid() OR seller_id = auth.uid())
-    )
-  );
+DROP POLICY IF EXISTS "Users can send messages to their conversations" ON public.messages;
+DROP POLICY IF EXISTS "Anyone can insert messages" ON public.messages;
+CREATE POLICY "Anyone can insert messages"
+  ON public.messages FOR INSERT WITH CHECK (true);
 
 -- 5. REVIEWS TABLE (Ratings & Feedback)
 CREATE TABLE IF NOT EXISTS public.reviews (

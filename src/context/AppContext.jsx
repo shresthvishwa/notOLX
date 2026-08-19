@@ -719,12 +719,13 @@ export const AppProvider = ({ children }) => {
       // Persist to Supabase or Express backend
       if (isSupabaseConfigured && supabase) {
         supabase.from('conversations').insert({
-          product_id: product.id,
-          buyer_id: currentUser.id,
-          seller_id: product.seller_id,
+          id: toUuid(newConv.id),
+          product_id: toUuid(product.id),
+          buyer_id: toUuid(currentUser.id),
+          seller_id: toUuid(product.seller_id),
           last_message: newConv.last_message
         }).then(({ error }) => {
-          if (error) console.error('Supabase conversation insert error:', error);
+          if (error) console.error('Supabase conversation insert notice:', error.message);
         });
       } else {
         fetch(`${getApiBaseUrl()}/api/conversations`, {
@@ -817,21 +818,19 @@ export const AppProvider = ({ children }) => {
     if (isSupabaseConfigured && supabase) {
       try {
         const { error } = await supabase.from('messages').insert({
-          id: clientMsgId,
-          conversation_id: conversationId,
-          sender_id: currentUser.id,
-          receiver_id: receiverId,
+          id: toUuid(clientMsgId),
+          conversation_id: toUuid(conversationId),
+          sender_id: toUuid(currentUser.id),
           content: content.trim(),
           offer_price: offerPrice ? parseFloat(offerPrice) : null,
-          meetup_spot: meetupSpot,
-          status: 'sent'
+          meetup_spot: meetupSpot || null
         });
         if (error) {
-          console.warn('Supabase remote insert info (using local fallback):', error.message || error);
+          console.warn('Supabase remote insert notice:', error.message || error);
         }
         updateMsgStatus(clientMsgId, 'sent');
       } catch (err) {
-        console.warn('Supabase real-time send info (using local fallback):', err);
+        console.warn('Supabase real-time send exception:', err);
         updateMsgStatus(clientMsgId, 'sent');
       }
     } else {
