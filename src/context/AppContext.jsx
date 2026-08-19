@@ -513,6 +513,12 @@ export const AppProvider = ({ children }) => {
 
   // Listing Handlers (Create, Edit, Delete, Status Change)
   const addListing = async (listingData) => {
+    if (!currentUser || !currentUser.id) {
+      addToast('Authentication required. Please sign in with your @thapar.edu email to list items.', 'error');
+      setIsAuthOpen(true);
+      return false;
+    }
+
     const newListing = {
       id: `prod_${Date.now()}`,
       seller_id: currentUser.id,
