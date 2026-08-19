@@ -63,7 +63,7 @@ export const AppProvider = ({ children }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCondition, setSelectedCondition] = useState('all');
   const [selectedCollege, setSelectedCollege] = useState(MOCK_COLLEGES[0]);
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 500 });
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 50000 });
   const [sortBy, setSortBy] = useState('newest'); // 'newest', 'price-low', 'price-high', 'popular'
 
   // Modal Control States
@@ -533,6 +533,11 @@ export const AppProvider = ({ children }) => {
 
     setListings(prev => [newListing, ...prev]);
     setIsCreateListingOpen(false);
+    setSelectedCategory('all');
+    setSelectedCondition('all');
+    setSearchQuery('');
+    setPriceRange({ min: 0, max: 50000 });
+    setViewMode('marketplace');
     addToast('Item listed on campus marketplace!', 'success');
 
     // Sync to Supabase cloud if active
