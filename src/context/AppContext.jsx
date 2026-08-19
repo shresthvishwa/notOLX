@@ -516,6 +516,8 @@ export const AppProvider = ({ children }) => {
     const newListing = {
       id: `prod_${Date.now()}`,
       seller_id: currentUser.id,
+      seller_email: currentUser.email || '',
+      seller_name: currentUser.full_name || 'Thapar Student',
       title: listingData.title,
       description: listingData.description,
       price: parseFloat(listingData.price),

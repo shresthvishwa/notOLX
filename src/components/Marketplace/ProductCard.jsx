@@ -1,15 +1,22 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { MapPin, Star, Eye } from 'lucide-react';
+import { MapPin, Star, Eye, Trash2, User } from 'lucide-react';
 
 export const ProductCard = ({ product }) => {
-  const { setActiveProductDetail, allStudents } = useApp();
+  const { setActiveProductDetail, allStudents, currentUser, deleteListing } = useApp();
 
-  const seller = allStudents.find(s => s.id === product.seller_id) || {
-    full_name: 'Student Seller',
-    rating_avg: 5.0,
-    avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'
-  };
+  const isMine = currentUser && (
+    currentUser.id === product.seller_id || 
+    (currentUser.email && product.seller_email && currentUser.email.toLowerCase() === product.seller_email.toLowerCase())
+  );
+
+  const seller = isMine ? currentUser : (
+    allStudents.find(s => s.id === product.seller_id || (s.email && product.seller_email && s.email.toLowerCase() === product.seller_email.toLowerCase())) || {
+      full_name: product.seller_name || 'Campus Student',
+      rating_avg: 5.0,
+      avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'
+    }
+  );
 
   const getConditionClass = (cond) => {
     switch (cond) {
@@ -24,6 +31,7 @@ export const ProductCard = ({ product }) => {
     <div 
       className="product-card"
       onClick={() => setActiveProductDetail(product)}
+      style={{ position: 'relative' }}
     >
       {/* Product Image Container */}
       <div className="card-img-wrapper">
@@ -38,6 +46,28 @@ export const ProductCard = ({ product }) => {
         <span className={`condition-badge ${getConditionClass(product.condition)}`}>
           {product.condition}
         </span>
+
+        {/* "Posted by You" Badge */}
+        {isMine && (
+          <span style={{
+            position: 'absolute',
+            top: '8px',
+            left: '8px',
+            backgroundColor: 'var(--primary)',
+            color: '#ffffff',
+            fontSize: '0.68rem',
+            fontWeight: 800,
+            padding: '0.2rem 0.55rem',
+            borderRadius: 'var(--radius-full)',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.2rem',
+            zIndex: 2
+          }}>
+            <User size={10} /> Posted by You
+          </span>
+        )}
 
         {/* Status Overlay if Reserved/Sold */}
         {product.status !== 'available' && (
@@ -75,19 +105,40 @@ export const ProductCard = ({ product }) => {
         </div>
 
         {/* Seller Info & Rating Footer */}
-        <div className="card-meta">
-          <img 
-            src={seller.avatar_url} 
-            alt={seller.full_name} 
-            style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'cover' }}
-          />
-          <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {seller.full_name.split(' ')[0]}
-          </span>
+        <div className="card-meta" style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: 1, minWidth: 0 }}>
+            <img 
+              src={seller.avatar_url} 
+              alt={seller.full_name} 
+              style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'cover' }}
+            />
+            <span style={{ fontWeight: 700, fontSize: '0.78rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {isMine ? `You (${seller.full_name.split(' ')[0]})` : seller.full_name.split(' ')[0]}
+            </span>
+          </div>
 
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: 700, color: '#f59e0b' }}>
-            <Star size={12} fill="#f59e0b" />
-            <span>{seller.rating_avg || 5.0}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: 700, color: '#f59e0b', fontSize: '0.78rem' }}>
+              <Star size={12} fill="#f59e0b" />
+              <span>{seller.rating_avg || 5.0}</span>
+            </div>
+
+            {isMine && (
+              <button
+                type="button"
+                className="btn btn-danger btn-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm(`Delete your listing "${product.title}" from campus marketplace?`)) {
+                    deleteListing(product.id);
+                  }
+                }}
+                style={{ padding: '0.15rem 0.4rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.2rem', backgroundColor: '#ef4444', color: '#ffffff', borderRadius: '4px' }}
+                title="Delete your posted item"
+              >
+                <Trash2 size={11} /> Delete
+              </button>
+            )}
           </div>
         </div>
       </div>
