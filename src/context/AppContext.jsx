@@ -476,6 +476,41 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // Live Marketplace Listings Synchronization (Syncs listings across devices/users)
+  useEffect(() => {
+    const fetchLiveListings = async () => {
+      if (isSupabaseConfigured && supabase) return;
+
+      try {
+        const apiUrl = `${getApiBaseUrl()}/api/listings`;
+        const res = await fetch(apiUrl);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.listings && data.listings.length > 0) {
+            setListings(prev => {
+              const merged = [...prev];
+              data.listings.forEach(remote => {
+                const idx = merged.findIndex(l => l.id === remote.id);
+                if (idx !== -1) {
+                  merged[idx] = { ...merged[idx], ...remote };
+                } else {
+                  merged.unshift(remote);
+                }
+              });
+              return merged;
+            });
+          }
+        }
+      } catch (err) {
+        // Fallback to local storage
+      }
+    };
+
+    fetchLiveListings();
+    const interval = setInterval(fetchLiveListings, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Listing Handlers (Create, Edit, Delete, Status Change)
   const addListing = async (listingData) => {
     const newListing = {
@@ -500,12 +535,24 @@ export const AppProvider = ({ children }) => {
     setIsCreateListingOpen(false);
     addToast('Item listed on campus marketplace!', 'success');
 
+    // Sync to Supabase cloud if active
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('listings').insert([newListing]);
       } catch (err) {
         console.warn('Supabase insert error:', err);
       }
+    }
+
+    // Always sync to Express backend server for cross-device/user access
+    try {
+      await fetch(`${getApiBaseUrl()}/api/listings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newListing)
+      });
+    } catch (err) {
+      console.warn('Express listing post error:', err);
     }
   };
 
@@ -524,6 +571,16 @@ export const AppProvider = ({ children }) => {
         console.warn('Supabase update error:', err);
       }
     }
+
+    try {
+      await fetch(`${getApiBaseUrl()}/api/listings/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedFields)
+      });
+    } catch (err) {
+      console.warn('Express listing PUT error:', err);
+    }
   };
 
   const deleteListing = async (id) => {
@@ -539,6 +596,14 @@ export const AppProvider = ({ children }) => {
       } catch (err) {
         console.warn('Supabase delete error:', err);
       }
+    }
+
+    try {
+      await fetch(`${getApiBaseUrl()}/api/listings/${id}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.warn('Express listing DELETE error:', err);
     }
   };
 

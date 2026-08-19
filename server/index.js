@@ -116,7 +116,7 @@ app.post('/api/listings', (req, res) => {
   }
 
   const newListing = {
-    id: `prod_${Date.now()}`,
+    id: req.body.id || `prod_${Date.now()}`,
     seller_id: seller_id || 'usr_1',
     title,
     description: description || '',
