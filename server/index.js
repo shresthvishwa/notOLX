@@ -111,13 +111,17 @@ app.post('/api/listings', (req, res) => {
   const db = readDB();
   const { title, description, price, category, condition, images, campus_location, seller_id } = req.body;
 
+  if (!seller_id) {
+    return res.status(401).json({ error: 'Authentication required. Missing seller_id for listing creation.' });
+  }
+
   if (!title || !price) {
     return res.status(400).json({ error: 'Title and price are required.' });
   }
 
   const newListing = {
     id: req.body.id || `prod_${Date.now()}`,
-    seller_id: seller_id || 'usr_1',
+    seller_id: seller_id,
     title,
     description: description || '',
     price: parseFloat(price),
