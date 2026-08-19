@@ -116,7 +116,7 @@ app.post('/api/listings', (req, res) => {
   }
 
   const newListing = {
-    id: `prod_${Date.now()}`,
+    id: req.body.id || `prod_${Date.now()}`,
     seller_id: seller_id || 'usr_1',
     title,
     description: description || '',
@@ -158,6 +158,11 @@ app.delete('/api/listings/:id', (req, res) => {
 });
 
 // Chat Endpoints
+app.get('/api/conversations', (req, res) => {
+  const db = readDB();
+  res.json({ count: db.conversations.length, conversations: db.conversations });
+});
+
 app.get('/api/conversations/:userId', (req, res) => {
   const db = readDB();
   const userId = req.params.userId;
@@ -165,26 +170,76 @@ app.get('/api/conversations/:userId', (req, res) => {
   res.json({ count: userConvs.length, conversations: userConvs });
 });
 
+app.post('/api/conversations', (req, res) => {
+  const db = readDB();
+  const { product_id, buyer_id, seller_id, initial_message } = req.body;
+
+  let existing = db.conversations.find(
+    c => c.product_id === product_id && (c.buyer_id === buyer_id || c.seller_id === buyer_id)
+  );
+
+  if (existing) {
+    return res.json({ success: true, conversation: existing });
+  }
+
+  const newConv = {
+    id: `conv_${Date.now()}`,
+    product_id,
+    buyer_id,
+    seller_id,
+    last_message: initial_message || 'New conversation started',
+    updated_at: new Date().toISOString(),
+    messages: [
+      {
+        id: `msg_${Date.now()}`,
+        sender_id: buyer_id,
+        content: initial_message || 'Hi, I am interested in this item.',
+        created_at: new Date().toISOString()
+      }
+    ]
+  };
+
+  db.conversations.unshift(newConv);
+  writeDB(db);
+  res.status(201).json({ success: true, conversation: newConv });
+});
+
 app.post('/api/messages', (req, res) => {
   const db = readDB();
-  const { conversation_id, sender_id, content, offer_price, meetup_spot } = req.body;
+  const { conversation_id, sender_id, receiver_id, content, offer_price, meetup_spot, client_msg_id } = req.body;
+
+  if (!conversation_id || !sender_id || !content) {
+    return res.status(400).json({ error: 'Missing required message parameters (conversation_id, sender_id, content).' });
+  }
 
   let conv = db.conversations.find(c => c.id === conversation_id);
   if (!conv) {
     return res.status(404).json({ error: 'Conversation not found.' });
   }
 
+  // Deduplication check: verify if message with client_msg_id or identical payload was already saved
+  const msgId = client_msg_id || `msg_${Date.now()}`;
+  const isDuplicate = conv.messages.some(m => m.id === msgId);
+  if (isDuplicate) {
+    const existingMsg = conv.messages.find(m => m.id === msgId);
+    return res.json({ success: true, message: existingMsg, duplicate: true });
+  }
+
+  const computedReceiverId = receiver_id || (conv.buyer_id === sender_id ? conv.seller_id : conv.buyer_id);
+
   const newMsg = {
-    id: `msg_${Date.now()}`,
+    id: msgId,
     sender_id,
-    content,
+    receiver_id: computedReceiverId,
+    content: content.trim(),
     offer_price: offer_price ? parseFloat(offer_price) : null,
     meetup_spot: meetup_spot || null,
+    status: 'sent',
     created_at: new Date().toISOString()
   };
 
   conv.messages.push(newMsg);
-  conv.last_message = content;
+  conv.last_message = content.trim();
   conv.updated_at = newMsg.created_at;
 
   writeDB(db);

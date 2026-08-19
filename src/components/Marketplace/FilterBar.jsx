@@ -120,8 +120,8 @@ export const FilterBar = () => {
             <input
               type="range"
               min="10"
-              max="500"
-              step="10"
+              max="50000"
+              step="100"
               value={priceRange.max}
               onChange={(e) => setPriceRange(prev => ({ ...prev, max: parseInt(e.target.value) }))}
               style={{ width: '90px', accentColor: 'var(--primary)', cursor: 'pointer' }}

@@ -73,30 +73,12 @@ const MarketplaceView = ({ onBackToLanding }) => {
           flexWrap: 'wrap',
           gap: '1rem'
         }}>
-          <div style={{ maxWidth: '600px' }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              color: '#ffffff',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              padding: '0.2rem 0.75rem',
-              borderRadius: 'var(--radius-full)',
-              fontSize: '0.78rem',
-              fontWeight: 800,
-              marginBottom: '0.75rem',
-              backdropFilter: 'blur(4px)'
-            }}>
-              <GraduationCap size={16} /> Thapar University Exclusive (@thapar.edu)
-            </div>
-
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', fontWeight: 800, lineHeight: 1.2, marginBottom: '0.5rem', color: '#ffffff' }}>
-              Buy & Sell Used TIET Campus Essentials
+          <div style={{ maxWidth: '650px' }}>
+            <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1.2, marginBottom: '0.4rem', color: '#ffffff' }}>
+              Your Trusted Peer-to-Peer Campus Exchange
             </h1>
-
-            <p style={{ fontSize: '0.95rem', color: 'var(--hero-muted)', lineHeight: 1.5 }}>
-              Restricted exclusively to verified <strong>@thapar.edu</strong> student accounts. Buy & sell Casio calculators, DSA textbooks, cycles, and lab coats from students like Shresth Vishwakarma, Aditya Salwan, and Nishchay Goyal.
+            <p style={{ fontSize: '0.95rem', color: 'var(--hero-muted)', lineHeight: 1.5, margin: 0 }}>
+              Save money, declutter your room, and get what you need for the semester directly from fellow students.
             </p>
           </div>
 
@@ -225,32 +207,14 @@ const MarketplaceView = ({ onBackToLanding }) => {
 };
 
 const MainRouter = () => {
-  const { currentUser } = useApp();
-  const [viewMode, setViewMode] = useState(() => {
-    const savedView = localStorage.getItem('notolx_view_mode');
-    if (savedView) return savedView;
-    const savedUser = localStorage.getItem('notolx_current_user');
-    return savedUser ? 'marketplace' : 'landing';
-  });
-
-  useEffect(() => {
-    if (!currentUser) {
-      setViewMode('landing');
-      localStorage.setItem('notolx_view_mode', 'landing');
-    }
-  }, [currentUser]);
-
-  const handleSetView = (mode) => {
-    setViewMode(mode);
-    localStorage.setItem('notolx_view_mode', mode);
-  };
+  const { currentUser, viewMode, setViewMode } = useApp();
 
   return (
     <>
       {viewMode === 'landing' || !currentUser ? (
-        <LandingPage onExploreMarketplace={() => handleSetView('marketplace')} />
+        <LandingPage onExploreMarketplace={() => setViewMode('marketplace')} />
       ) : (
-        <MarketplaceView onBackToLanding={() => handleSetView('landing')} />
+        <MarketplaceView onBackToLanding={() => setViewMode('landing')} />
       )}
     </>
   );
