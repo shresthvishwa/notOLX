@@ -44,17 +44,24 @@ CREATE TABLE IF NOT EXISTS public.listings (
 
 ALTER TABLE public.listings ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Listings are viewable by anyone" ON public.listings;
 CREATE POLICY "Listings are viewable by anyone"
   ON public.listings FOR SELECT USING (true);
 
-CREATE POLICY "Users can insert own listings"
-  ON public.listings FOR INSERT WITH CHECK (auth.uid() = seller_id);
+DROP POLICY IF EXISTS "Users can insert own listings" ON public.listings;
+DROP POLICY IF EXISTS "Anyone can insert listings" ON public.listings;
+CREATE POLICY "Anyone can insert listings"
+  ON public.listings FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Users can update own listings"
-  ON public.listings FOR UPDATE USING (auth.uid() = seller_id);
+DROP POLICY IF EXISTS "Users can update own listings" ON public.listings;
+DROP POLICY IF EXISTS "Anyone can update listings" ON public.listings;
+CREATE POLICY "Anyone can update listings"
+  ON public.listings FOR UPDATE USING (true);
 
-CREATE POLICY "Users can delete own listings"
-  ON public.listings FOR DELETE USING (auth.uid() = seller_id);
+DROP POLICY IF EXISTS "Users can delete own listings" ON public.listings;
+DROP POLICY IF EXISTS "Anyone can delete listings" ON public.listings;
+CREATE POLICY "Anyone can delete listings"
+  ON public.listings FOR DELETE USING (true);
 
 -- 3. CONVERSATIONS TABLE (1-on-1 Chat Threads)
 CREATE TABLE IF NOT EXISTS public.conversations (
