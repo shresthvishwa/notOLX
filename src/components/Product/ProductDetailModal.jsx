@@ -32,13 +32,9 @@ export const ProductDetailModal = () => {
 
   if (!activeProductDetail) return null;
 
-  const isOwner = currentUser && (
-    currentUser.id === product.seller_id || 
-    (currentUser.email && product.seller_email && currentUser.email.toLowerCase() === product.seller_email.toLowerCase())
-  );
-  const seller = isOwner ? currentUser : (
-    allStudents.find(s => s.id === product.seller_id || (s.email && product.seller_email && s.email.toLowerCase() === product.seller_email.toLowerCase())) || currentUser || { full_name: product.seller_name || 'Campus Student' }
-  );
+  const product = activeProductDetail;
+  const isOwner = currentUser?.id === product.seller_id;
+  const seller = allStudents.find(s => s.id === product.seller_id) || currentUser || {};
   const sellerReviews = reviews.filter(r => r.reviewee_id === seller.id);
 
   const images = product.images && product.images.length > 0 

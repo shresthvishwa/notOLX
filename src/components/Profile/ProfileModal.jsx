@@ -20,10 +20,7 @@ export const ProfileModal = () => {
 
   if (!isProfileOpen || !currentUser) return null;
 
-  const userListings = rawListings.filter(item => 
-    item.seller_id === currentUser.id || 
-    (currentUser.email && item.seller_email && item.seller_email.toLowerCase() === currentUser.email.toLowerCase())
-  );
+  const userListings = rawListings.filter(item => item.seller_id === currentUser.id);
   const userReviews = reviews.filter(r => r.reviewee_id === currentUser.id);
 
   const confirmAndDelete = () => {
