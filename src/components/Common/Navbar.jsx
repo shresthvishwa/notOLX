@@ -235,11 +235,11 @@ export const Navbar = () => {
                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.75rem' }}
               >
                 <img 
-                  src={currentUser.avatar_url} 
-                  alt={currentUser.full_name} 
+                  src={currentUser.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=student'} 
+                  alt={currentUser.full_name || 'Student'} 
                   style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover' }} 
                 />
-                <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{currentUser.full_name.split(' ')[0]}</span>
+                <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{(currentUser.full_name || 'Student').split(' ')[0]}</span>
                 <ChevronDown size={14} />
               </button>
 
