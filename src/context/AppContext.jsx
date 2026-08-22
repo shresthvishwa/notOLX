@@ -252,6 +252,16 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
 
+    // Check initial active session on load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const userEmail = session.user.email || '';
+        if (isThaparEmail(userEmail)) {
+          handleLogin(userEmail, session.user);
+        }
+      }
+    });
+
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user) {
         const userEmail = session.user.email || '';
@@ -261,9 +271,12 @@ export const AppProvider = ({ children }) => {
           setIsAuthOpen(true);
           setViewMode('landing');
         } else {
-          handleLogin(userEmail);
+          handleLogin(userEmail, session.user);
           setViewMode('marketplace');
         }
+      } else if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+        localStorage.removeItem('notolx_current_user');
       }
     });
 
@@ -465,7 +478,7 @@ export const AppProvider = ({ children }) => {
     addToast('Your student account and active listings have been permanently deleted.', 'info');
   };
 
-  const handleLogin = (email) => {
+  const handleLogin = async (email, sessionUser = null) => {
     const cleanEmail = (email || '').trim().toLowerCase();
 
     if (!cleanEmail.endsWith('@thapar.edu')) {
@@ -473,40 +486,58 @@ export const AppProvider = ({ children }) => {
       return false;
     }
 
-    const existing = allStudents.find(s => s.email.toLowerCase() === cleanEmail);
-    if (existing) {
-      setCurrentUser(existing);
-      setIsAuthOpen(false);
-      localStorage.setItem('notolx_view_mode', 'marketplace');
-      addToast(`Welcome back, ${existing.full_name}!`, 'success');
-      return true;
-    } else {
-      // Create new student profile for Thapar University
-      const namePart = cleanEmail.split('@')[0];
-      const formattedName = namePart.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
-      
-      const newStudent = {
-        id: `usr_${Date.now()}`,
-        email: cleanEmail,
-        full_name: formattedName || 'Thapar Student',
-        college_name: 'Thapar Institute of Engineering & Technology',
-        college_id: `TU-${Math.floor(1000 + Math.random() * 9000)}`,
-        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${namePart}`,
-        dorm_block: 'Thapar Hostel',
-        major: 'Engineering Student',
-        rating_avg: 5.0,
-        rating_count: 0,
-        verified: true,
-        joined_date: 'Just now'
-      };
+    const userId = sessionUser ? sessionUser.id : toUuid(`usr_${cleanEmail}`);
+    const namePart = cleanEmail.split('@')[0];
+    const formattedName = sessionUser?.user_metadata?.full_name || namePart.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
 
-      setAllStudents(prev => [...prev, newStudent]);
-      setCurrentUser(newStudent);
-      setIsAuthOpen(false);
-      localStorage.setItem('notolx_view_mode', 'marketplace');
-      addToast(`Account created! Verified student for Thapar Institute of Engineering & Technology`, 'success');
-      return true;
+    const studentProfile = {
+      id: userId,
+      email: cleanEmail,
+      full_name: formattedName || 'Thapar Student',
+      college_name: 'Thapar Institute of Engineering & Technology',
+      college_id: `TU-${userId.substring(0, 4).toUpperCase()}`,
+      avatar_url: sessionUser?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${namePart}`,
+      dorm_block: 'Thapar Hostel',
+      major: 'Engineering Student',
+      rating_avg: 5.0,
+      rating_count: 0,
+      verified: true,
+      joined_date: 'Just now'
+    };
+
+    setAllStudents(prev => {
+      const idx = prev.findIndex(s => s.email.toLowerCase() === cleanEmail);
+      if (idx !== -1) {
+        const copy = [...prev];
+        copy[idx] = { ...copy[idx], ...studentProfile };
+        return copy;
+      }
+      return [...prev, studentProfile];
+    });
+
+    setCurrentUser(studentProfile);
+    setIsAuthOpen(false);
+    localStorage.setItem('notolx_view_mode', 'marketplace');
+    addToast(`Welcome, ${studentProfile.full_name}! Verified @thapar.edu Student`, 'success');
+
+    // Upsert into Supabase public.profiles table to satisfy foreign key & RLS policies
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('profiles').upsert({
+          id: userId,
+          email: cleanEmail,
+          full_name: studentProfile.full_name,
+          college_name: studentProfile.college_name,
+          college_id: studentProfile.college_id,
+          avatar_url: studentProfile.avatar_url,
+          dorm_block: studentProfile.dorm_block
+        });
+      } catch (err) {
+        console.warn('Supabase profile upsert notice:', err);
+      }
     }
+
+    return true;
   };
 
   // Live Marketplace Listings Synchronization (Syncs listings across devices/users)
@@ -733,6 +764,14 @@ export const AppProvider = ({ children }) => {
           last_message: newConv.last_message
         }).then(({ error }) => {
           if (error) console.error('Supabase conversation insert notice:', error.message);
+          supabase.from('messages').insert({
+            id: toUuid(clientMsgId),
+            conversation_id: toUuid(newConv.id),
+            sender_id: toUuid(currentUser.id),
+            content: newConv.messages[0].content
+          }).then(({ error: msgErr }) => {
+            if (msgErr) console.error('Supabase initial message insert notice:', msgErr.message);
+          });
         });
       } else {
         fetch(`${getApiBaseUrl()}/api/conversations`, {
