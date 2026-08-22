@@ -28,12 +28,12 @@ export const AppProvider = ({ children }) => {
   // Current Authenticated / Active Student User
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('notolx_current_user');
-    return saved ? JSON.parse(saved) : MOCK_STUDENTS[0];
+    return saved ? JSON.parse(saved) : null;
   });
 
   const [allStudents, setAllStudents] = useState(() => {
     const saved = localStorage.getItem('notolx_students');
-    return saved ? JSON.parse(saved) : MOCK_STUDENTS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   // Listings State
@@ -392,15 +392,6 @@ export const AppProvider = ({ children }) => {
       supabase.removeChannel(channel);
     };
   }, [activeChat]);
-
-  // Persona Switcher (For testing as Buyer or Seller)
-  const switchPersona = (studentId) => {
-    const student = allStudents.find(s => s.id === studentId);
-    if (student) {
-      setCurrentUser(student);
-      addToast(`Switched active profile to ${student.full_name}`, 'success');
-    }
-  };
 
   // Authentication Handlers
   const signInWithGoogle = async () => {
@@ -934,7 +925,6 @@ export const AppProvider = ({ children }) => {
         // Auth & User
         currentUser,
         allStudents,
-        switchPersona,
         handleLogin,
         signInWithGoogle,
         handleLogout,

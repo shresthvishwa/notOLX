@@ -19,13 +19,8 @@ import {
 import { MOCK_LISTINGS } from '../../data/mockData';
 
 export const LandingPage = ({ onExploreMarketplace }) => {
-  const { allStudents, switchPersona, handleLogin, theme, toggleTheme } = useApp();
+  const { theme, toggleTheme } = useApp();
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
-
-  const handleQuickDemoClick = (studentId) => {
-    switchPersona(studentId);
-    if (onExploreMarketplace) onExploreMarketplace();
-  };
 
   return (
     <div style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

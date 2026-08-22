@@ -19,8 +19,6 @@ import {
 export const Navbar = () => {
   const { 
     currentUser, 
-    allStudents, 
-    switchPersona, 
     searchQuery, 
     setSearchQuery, 
     setIsAuthOpen, 
@@ -258,45 +256,6 @@ export const Navbar = () => {
                   width: '260px',
                   padding: '0.6rem'
                 }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', padding: '0.3rem 0.5rem', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <Sparkles size={12} color="var(--primary)" /> Switch Student Persona
-                  </div>
-
-                  {allStudents.map(student => (
-                    <button
-                      key={student.id}
-                      onClick={() => {
-                        switchPersona(student.id);
-                        setIsPersonaMenuOpen(false);
-                      }}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '0.55rem',
-                        borderRadius: 'var(--radius-sm)',
-                        border: 'none',
-                        backgroundColor: currentUser.id === student.id ? 'var(--primary-light)' : 'transparent',
-                        color: 'var(--text-main)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.6rem',
-                        marginBottom: '0.2rem'
-                      }}
-                    >
-                      <img 
-                        src={student.avatar_url} 
-                        alt={student.full_name} 
-                        style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} 
-                      />
-                      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-                        <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{student.full_name}</span>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.major}</span>
-                      </div>
-                    </button>
-                  ))}
-
-                  <div style={{ borderTop: '1px solid var(--border-color)', margin: '0.4rem 0' }}></div>
 
                   <button
                     onClick={() => {
