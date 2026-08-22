@@ -82,6 +82,7 @@ export const AppProvider = ({ children }) => {
   // Modal Control States
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false);
+  const [isMyListingsOpen, setIsMyListingsOpen] = useState(false);
   const [editingListing, setEditingListing] = useState(null);
   const [activeProductDetail, setActiveProductDetail] = useState(null);
   const [activeChat, setActiveChat] = useState(() => {
@@ -907,7 +908,11 @@ export const AppProvider = ({ children }) => {
       item.campus_location.toLowerCase().includes(searchQuery.toLowerCase());
 
     // Category Filter
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' 
+      ? true 
+      : selectedCategory === 'my_listings'
+      ? item.seller_id === currentUser?.id
+      : item.category === selectedCategory;
 
     // Condition Filter
     const matchesCondition = selectedCondition === 'all' || item.condition === selectedCondition;
@@ -966,6 +971,8 @@ export const AppProvider = ({ children }) => {
         // Modals
         isCreateListingOpen,
         setIsCreateListingOpen,
+        isMyListingsOpen,
+        setIsMyListingsOpen,
         editingListing,
         setEditingListing,
         activeProductDetail,

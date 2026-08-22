@@ -51,6 +51,7 @@ export const MOCK_COLLEGES = [
 
 export const CATEGORIES = [
   { id: 'all', label: 'All Campus Items', icon: 'Sparkles' },
+  { id: 'my_listings', label: 'My Selling Items', icon: 'Tag' },
   { id: 'calculators', label: 'Tech & Calculators', icon: 'Calculator' },
   { id: 'textbooks', label: 'Textbooks & Notes', icon: 'BookOpen' },
   { id: 'cycles', label: 'Cycles & Transport', icon: 'Bike' },

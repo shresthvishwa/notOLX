@@ -10,6 +10,7 @@ import { ChatModal } from './components/Chat/ChatModal';
 import { ReviewModal } from './components/Reviews/ReviewModal';
 import { AuthModal } from './components/Auth/AuthModal';
 import { ProfileModal } from './components/Profile/ProfileModal';
+import { MySellingItemsModal } from './components/Product/MySellingItemsModal';
 import { ToastContainer } from './components/Common/ToastContainer';
 import { 
   Building2, 
@@ -178,6 +179,7 @@ const MarketplaceView = ({ onBackToLanding }) => {
 
       <ProductDetailModal />
       <CreateEditListingModal />
+      <MySellingItemsModal />
       <ChatModal />
       <ReviewModal />
       <AuthModal />
