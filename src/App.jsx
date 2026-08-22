@@ -52,7 +52,7 @@ const MarketplaceView = ({ onBackToLanding }) => {
 
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700 }}>
             {currentUser ? (
-              <>Logged in as: <strong style={{ color: 'var(--text-main)' }}>{currentUser.full_name || currentUser.email}</strong> ({currentUser.email})</>
+              <>Logged in as: <strong style={{ color: 'var(--text-main)' }}>{currentUser.full_name}</strong> ({currentUser.email})</>
             ) : (
               <span style={{ color: 'var(--text-muted)' }}>Not Signed In • Click "Sign In" to access full marketplace features</span>
             )}

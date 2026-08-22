@@ -82,7 +82,7 @@ export const ProductCard = ({ product }) => {
             style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'cover' }}
           />
           <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {(seller.full_name || 'Student Seller').split(' ')[0]}
+            {seller.full_name.split(' ')[0]}
           </span>
 
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: 700, color: '#f59e0b' }}>

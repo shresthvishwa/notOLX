@@ -1,6 +1,49 @@
 // Pre-populated Thapar University student profiles, listings, conversations, and reviews
 
-export const MOCK_STUDENTS = [];
+export const MOCK_STUDENTS = [
+  {
+    id: 'usr_1',
+    email: 'shresth.vishwakarma@thapar.edu',
+    full_name: 'Shresth Vishwakarma',
+    college_name: 'Thapar Institute of Engineering & Technology',
+    college_id: 'TU-2024-101',
+    avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    dorm_block: 'Hostel J (Rm 314)',
+    major: 'Computer Science Engineering (3rd Year)',
+    rating_avg: 4.9,
+    rating_count: 14,
+    verified: true,
+    joined_date: 'Sep 2024'
+  },
+  {
+    id: 'usr_2',
+    email: 'aditya.salwan@thapar.edu',
+    full_name: 'Aditya Salwan',
+    college_name: 'Thapar Institute of Engineering & Technology',
+    college_id: 'TU-2024-102',
+    avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+    dorm_block: 'Hostel M (Rm 204)',
+    major: 'Electronics & Computer Engineering',
+    rating_avg: 5.0,
+    rating_count: 9,
+    verified: true,
+    joined_date: 'Jan 2025'
+  },
+  {
+    id: 'usr_3',
+    email: 'nishchay.goyal@thapar.edu',
+    full_name: 'Nishchay Goyal',
+    college_name: 'Thapar Institute of Engineering & Technology',
+    college_id: 'TU-2024-103',
+    avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
+    dorm_block: 'Hostel B (Rm 112)',
+    major: 'Mechanical Engineering',
+    rating_avg: 4.8,
+    rating_count: 21,
+    verified: true,
+    joined_date: 'Oct 2024'
+  }
+];
 
 export const MOCK_COLLEGES = [
   { name: 'Thapar Institute of Engineering & Technology', domain: 'thapar.edu', code: 'TIET' }
