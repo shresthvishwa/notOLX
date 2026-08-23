@@ -11,7 +11,19 @@ import confetti from 'canvas-confetti';
 
 const AppContext = createContext();
 
-// Helper to convert any string ID (e.g. 'usr_1', 'prod_101') to a valid PostgreSQL UUID format
+// Helper to generate RFC4122 compliant v4 UUIDs for native cross-device ID matching
+const generateUuid = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
+// Helper to convert legacy non-UUID string IDs to PostgreSQL UUID format
 const toUuid = (idStr) => {
   if (!idStr) return '00000000-0000-4000-8000-000000000001';
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -291,6 +303,7 @@ export const AppProvider = ({ children }) => {
 
     const fetchSupabaseData = async () => {
       try {
+        // 1. Fetch Listings
         const { data: dbListings } = await supabase
           .from('listings')
           .select('*')
@@ -299,9 +312,15 @@ export const AppProvider = ({ children }) => {
         if (dbListings && dbListings.length > 0) {
           setListings(prev => {
             const dbIds = new Set(dbListings.map(item => item.id));
-            const localOnly = prev.filter(item => !dbIds.has(item.id) && !dbIds.has(toUuid(item.id)));
+            const localOnly = prev.filter(item => !dbIds.has(item.id));
             return [...dbListings, ...localOnly];
           });
+        }
+
+        // 2. Fetch Profiles for seller info
+        const { data: dbProfiles } = await supabase.from('profiles').select('*');
+        if (dbProfiles && dbProfiles.length > 0) {
+          setAllStudents(dbProfiles);
         }
 
         const { data: dbReviews } = await supabase.from('reviews').select('*');
@@ -309,102 +328,54 @@ export const AppProvider = ({ children }) => {
           setReviews(dbReviews);
         }
 
-        // Fetch Conversations & Messages for Cross-Device Synchronization
-        const { data: dbConvs } = await supabase.from('conversations').select('*');
-        const { data: dbMsgs } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
+        // 3. Fetch Conversations & Messages for logged in user
+        if (currentUser?.id) {
+          const { data: dbConvs } = await supabase
+            .from('conversations')
+            .select('*')
+            .or(`buyer_id.eq.${currentUser.id},seller_id.eq.${currentUser.id}`)
+            .order('updated_at', { ascending: false });
 
-        if (dbConvs && dbConvs.length > 0) {
-          const structuredConvs = dbConvs.map(conv => {
-            const convMsgs = (dbMsgs || []).filter(m => m.conversation_id === conv.id);
-            return {
-              ...conv,
-              messages: convMsgs.length > 0 ? convMsgs : [
-                {
-                  id: `msg_init_${conv.id}`,
-                  sender_id: conv.buyer_id,
-                  receiver_id: conv.seller_id,
-                  content: conv.last_message || 'Hi, interested in this item!',
-                  status: 'sent',
-                  created_at: conv.created_at || new Date().toISOString()
-                }
-              ]
-            };
-          });
+          if (dbConvs && dbConvs.length > 0) {
+            const convIds = dbConvs.map(c => c.id);
+            const { data: dbMsgs } = await supabase
+              .from('messages')
+              .select('*')
+              .in('conversation_id', convIds)
+              .order('created_at', { ascending: true });
 
-          setConversations(prev => {
-            const merged = [...prev];
-            structuredConvs.forEach(remote => {
-              const idx = merged.findIndex(c => c.id === remote.id);
-              if (idx !== -1) {
-                merged[idx] = remote;
-              } else {
-                merged.unshift(remote);
-              }
+            const structuredConvs = dbConvs.map(conv => {
+              const convMsgs = (dbMsgs || []).filter(m => m.conversation_id === conv.id);
+              return {
+                ...conv,
+                messages: convMsgs
+              };
             });
-            return merged;
-          });
+
+            setConversations(structuredConvs);
+          }
         }
       } catch (err) {
-        console.warn('Supabase cross-device fetch warning, fallback to sandbox store:', err);
+        console.warn('Supabase cross-device fetch warning:', err);
       }
     };
 
     fetchSupabaseData();
+    const syncInterval = setInterval(fetchSupabaseData, 2000);
 
     // Supabase Realtime subscription for cross-device live messages & listings
     const channel = supabase
       .channel('public:notolx_realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-        const newMsg = payload.new;
-        setConversations(prev => prev.map(c => {
-          if (c.id === newMsg.conversation_id) {
-            if (c.messages.some(m => m.id === newMsg.id)) return c;
-            return {
-              ...c,
-              last_message: newMsg.content,
-              updated_at: newMsg.created_at || new Date().toISOString(),
-              messages: [...c.messages, newMsg]
-            };
-          }
-          return c;
-        }));
-
-        if (activeChat && activeChat.id === newMsg.conversation_id) {
-          setActiveChat(prev => {
-            if (prev.messages.some(m => m.id === newMsg.id)) return prev;
-            return {
-              ...prev,
-              last_message: newMsg.content,
-              messages: [...prev.messages, newMsg]
-            };
-          });
-        }
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'conversations' }, payload => {
-        const newConv = payload.new;
-        setConversations(prev => {
-          if (prev.some(c => c.id === newConv.id)) return prev;
-          return [{ ...newConv, messages: newConv.messages || [] }, ...prev];
-        });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, payload => {
-        if (payload.eventType === 'INSERT') {
-          setListings(prev => {
-            const exists = prev.some(l => l.id === payload.new.id);
-            return exists ? prev : [payload.new, ...prev];
-          });
-        } else if (payload.eventType === 'UPDATE') {
-          setListings(prev => prev.map(l => l.id === payload.new.id ? payload.new : l));
-        } else if (payload.eventType === 'DELETE') {
-          setListings(prev => prev.filter(l => l.id !== payload.old.id));
-        }
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => fetchSupabaseData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => fetchSupabaseData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, () => fetchSupabaseData())
       .subscribe();
 
     return () => {
+      clearInterval(syncInterval);
       supabase.removeChannel(channel);
     };
-  }, [activeChat]);
+  }, [currentUser]);
 
 
   // Authentication Handlers
@@ -575,11 +546,11 @@ export const AppProvider = ({ children }) => {
       return false;
     }
 
-    const rawId = `prod_${Date.now()}`;
+    const listingId = generateUuid();
     const sellerId = currentUser.id;
 
     const newListing = {
-      id: rawId,
+      id: listingId,
       seller_id: sellerId,
       title: listingData.title,
       description: listingData.description,
@@ -608,12 +579,7 @@ export const AppProvider = ({ children }) => {
     // Sync to Supabase cloud if active
     if (isSupabaseConfigured && supabase) {
       try {
-        const supabasePayload = {
-          ...newListing,
-          id: toUuid(rawId),
-          seller_id: toUuid(sellerId)
-        };
-        const { error } = await supabase.from('listings').insert([supabasePayload]);
+        const { error } = await supabase.from('listings').insert([newListing]);
         if (error) {
           console.warn('Supabase insert notice:', error.message);
         }
@@ -723,20 +689,24 @@ export const AppProvider = ({ children }) => {
     if (existingConv) {
       setActiveChat(existingConv);
     } else {
-      const clientMsgId = `msg_client_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const clientMsgId = generateUuid();
+      const convId = generateUuid();
+      const initialContent = `Hi! Is your ${product.title} still available for ₹${product.price}?`;
+
       const newConv = {
-        id: `conv_${Date.now()}`,
+        id: convId,
         product_id: product.id,
         buyer_id: currentUser.id,
         seller_id: product.seller_id,
-        last_message: `Hi, I'm interested in your ${product.title}`,
+        last_message: initialContent,
         updated_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
         messages: [
           {
             id: clientMsgId,
+            conversation_id: convId,
             sender_id: currentUser.id,
-            receiver_id: product.seller_id,
-            content: `Hi! Is your ${product.title} still available for ₹${product.price}?`,
+            content: initialContent,
             status: 'sent',
             created_at: new Date().toISOString()
           }
@@ -748,34 +718,23 @@ export const AppProvider = ({ children }) => {
 
       // Persist to Supabase or Express backend
       if (isSupabaseConfigured && supabase) {
-        supabase.from('conversations').insert({
-          id: toUuid(newConv.id),
-          product_id: toUuid(product.id),
-          buyer_id: toUuid(currentUser.id),
-          seller_id: toUuid(product.seller_id),
-          last_message: newConv.last_message
-        }).then(({ error }) => {
+        supabase.from('conversations').insert([{
+          id: convId,
+          product_id: product.id,
+          buyer_id: currentUser.id,
+          seller_id: product.seller_id,
+          last_message: initialContent
+        }]).then(({ error }) => {
           if (error) console.error('Supabase conversation insert notice:', error.message);
-          supabase.from('messages').insert({
-            id: toUuid(clientMsgId),
-            conversation_id: toUuid(newConv.id),
-            sender_id: toUuid(currentUser.id),
-            content: newConv.messages[0].content
-          }).then(({ error: msgErr }) => {
+          supabase.from('messages').insert([{
+            id: clientMsgId,
+            conversation_id: convId,
+            sender_id: currentUser.id,
+            content: initialContent
+          }]).then(({ error: msgErr }) => {
             if (msgErr) console.error('Supabase initial message insert notice:', msgErr.message);
           });
         });
-      } else {
-        fetch(`${getApiBaseUrl()}/api/conversations`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            product_id: product.id,
-            buyer_id: currentUser.id,
-            seller_id: product.seller_id,
-            initial_message: newConv.messages[0].content
-          })
-        }).catch(err => console.error('Express conversation POST error:', err));
       }
     }
   };
@@ -796,11 +755,12 @@ export const AppProvider = ({ children }) => {
     }
 
     const receiverId = conv.buyer_id === currentUser.id ? conv.seller_id : conv.buyer_id;
-    const clientMsgId = `msg_${now}_${Math.random().toString(36).substring(2, 7)}`;
+    const clientMsgId = generateUuid();
 
     // 2. Add message with 'sent' status immediately to local state & cross-tab sync
     const optimisticMessage = {
       id: clientMsgId,
+      conversation_id: conversationId,
       sender_id: currentUser.id,
       receiver_id: receiverId,
       content: content.trim(),
@@ -855,14 +815,20 @@ export const AppProvider = ({ children }) => {
     // 3. Sync to Supabase or Express backend DB (graceful fallback)
     if (isSupabaseConfigured && supabase) {
       try {
-        const { error } = await supabase.from('messages').insert({
-          id: toUuid(clientMsgId),
-          conversation_id: toUuid(conversationId),
-          sender_id: toUuid(currentUser.id),
+        const { error } = await supabase.from('messages').insert([{
+          id: clientMsgId,
+          conversation_id: conversationId,
+          sender_id: currentUser.id,
           content: content.trim(),
           offer_price: offerPrice ? parseFloat(offerPrice) : null,
           meetup_spot: meetupSpot || null
-        });
+        }]);
+
+        await supabase.from('conversations').update({
+          last_message: content.trim(),
+          updated_at: new Date().toISOString()
+        }).eq('id', conversationId);
+
         if (error) {
           console.warn('Supabase remote insert notice:', error.message || error);
         }
