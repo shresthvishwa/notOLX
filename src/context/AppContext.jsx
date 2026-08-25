@@ -581,10 +581,13 @@ export const AppProvider = ({ children }) => {
       try {
         const { error } = await supabase.from('listings').insert([newListing]);
         if (error) {
-          console.warn('Supabase insert notice:', error.message);
+          console.error('Supabase listing insert error:', error.message);
+          addToast(`Cloud sync error: ${error.message}`, 'error');
+        } else {
+          addToast('Item listed live on campus marketplace!', 'success');
         }
       } catch (err) {
-        console.warn('Supabase insert error:', err);
+        console.error('Supabase listing insert exception:', err);
       }
     }
 
