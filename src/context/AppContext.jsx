@@ -11,7 +11,19 @@ import confetti from 'canvas-confetti';
 
 const AppContext = createContext();
 
-// Helper to convert any string ID (e.g. 'usr_1', 'prod_101') to a valid PostgreSQL UUID format
+// Helper to generate RFC4122 compliant v4 UUIDs for native cross-device ID matching
+const generateUuid = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
+// Helper to convert legacy non-UUID string IDs to PostgreSQL UUID format
 const toUuid = (idStr) => {
   if (!idStr) return '00000000-0000-4000-8000-000000000001';
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -28,12 +40,12 @@ export const AppProvider = ({ children }) => {
   // Current Authenticated / Active Student User
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('notolx_current_user');
-    return saved ? JSON.parse(saved) : MOCK_STUDENTS[0];
+    return saved ? JSON.parse(saved) : null;
   });
 
   const [allStudents, setAllStudents] = useState(() => {
     const saved = localStorage.getItem('notolx_students');
-    return saved ? JSON.parse(saved) : MOCK_STUDENTS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   // Listings State
@@ -82,6 +94,7 @@ export const AppProvider = ({ children }) => {
   // Modal Control States
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false);
+  const [isMyListingsOpen, setIsMyListingsOpen] = useState(false);
   const [editingListing, setEditingListing] = useState(null);
   const [activeProductDetail, setActiveProductDetail] = useState(null);
   const [activeChat, setActiveChat] = useState(() => {
@@ -251,6 +264,16 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
 
+    // Check initial active session on load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const userEmail = session.user.email || '';
+        if (isThaparEmail(userEmail)) {
+          handleLogin(userEmail, session.user);
+        }
+      }
+    });
+
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user) {
         const userEmail = session.user.email || '';
@@ -260,9 +283,12 @@ export const AppProvider = ({ children }) => {
           setIsAuthOpen(true);
           setViewMode('landing');
         } else {
-          handleLogin(userEmail);
+          handleLogin(userEmail, session.user);
           setViewMode('marketplace');
         }
+      } else if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+        localStorage.removeItem('notolx_current_user');
       }
     });
 
@@ -277,6 +303,7 @@ export const AppProvider = ({ children }) => {
 
     const fetchSupabaseData = async () => {
       try {
+        // 1. Fetch Listings
         const { data: dbListings } = await supabase
           .from('listings')
           .select('*')
@@ -285,9 +312,15 @@ export const AppProvider = ({ children }) => {
         if (dbListings && dbListings.length > 0) {
           setListings(prev => {
             const dbIds = new Set(dbListings.map(item => item.id));
-            const localOnly = prev.filter(item => !dbIds.has(item.id) && !dbIds.has(toUuid(item.id)));
+            const localOnly = prev.filter(item => !dbIds.has(item.id));
             return [...dbListings, ...localOnly];
           });
+        }
+
+        // 2. Fetch Profiles for seller info
+        const { data: dbProfiles } = await supabase.from('profiles').select('*');
+        if (dbProfiles && dbProfiles.length > 0) {
+          setAllStudents(dbProfiles);
         }
 
         const { data: dbReviews } = await supabase.from('reviews').select('*');
@@ -295,111 +328,55 @@ export const AppProvider = ({ children }) => {
           setReviews(dbReviews);
         }
 
-        // Fetch Conversations & Messages for Cross-Device Synchronization
-        const { data: dbConvs } = await supabase.from('conversations').select('*');
-        const { data: dbMsgs } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
+        // 3. Fetch Conversations & Messages for logged in user
+        if (currentUser?.id) {
+          const { data: dbConvs } = await supabase
+            .from('conversations')
+            .select('*')
+            .or(`buyer_id.eq.${currentUser.id},seller_id.eq.${currentUser.id}`)
+            .order('updated_at', { ascending: false });
 
-        if (dbConvs && dbConvs.length > 0) {
-          const structuredConvs = dbConvs.map(conv => {
-            const convMsgs = (dbMsgs || []).filter(m => m.conversation_id === conv.id);
-            return {
-              ...conv,
-              messages: convMsgs.length > 0 ? convMsgs : [
-                {
-                  id: `msg_init_${conv.id}`,
-                  sender_id: conv.buyer_id,
-                  receiver_id: conv.seller_id,
-                  content: conv.last_message || 'Hi, interested in this item!',
-                  status: 'sent',
-                  created_at: conv.created_at || new Date().toISOString()
-                }
-              ]
-            };
-          });
+          if (dbConvs && dbConvs.length > 0) {
+            const convIds = dbConvs.map(c => c.id);
+            const { data: dbMsgs } = await supabase
+              .from('messages')
+              .select('*')
+              .in('conversation_id', convIds)
+              .order('created_at', { ascending: true });
 
-          setConversations(prev => {
-            const merged = [...prev];
-            structuredConvs.forEach(remote => {
-              const idx = merged.findIndex(c => c.id === remote.id);
-              if (idx !== -1) {
-                merged[idx] = remote;
-              } else {
-                merged.unshift(remote);
-              }
+            const structuredConvs = dbConvs.map(conv => {
+              const convMsgs = (dbMsgs || []).filter(m => m.conversation_id === conv.id);
+              return {
+                ...conv,
+                messages: convMsgs
+              };
             });
-            return merged;
-          });
+
+            setConversations(structuredConvs);
+          }
         }
       } catch (err) {
-        console.warn('Supabase cross-device fetch warning, fallback to sandbox store:', err);
+        console.warn('Supabase cross-device fetch warning:', err);
       }
     };
 
     fetchSupabaseData();
+    const syncInterval = setInterval(fetchSupabaseData, 2000);
 
     // Supabase Realtime subscription for cross-device live messages & listings
     const channel = supabase
       .channel('public:notolx_realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-        const newMsg = payload.new;
-        setConversations(prev => prev.map(c => {
-          if (c.id === newMsg.conversation_id) {
-            if (c.messages.some(m => m.id === newMsg.id)) return c;
-            return {
-              ...c,
-              last_message: newMsg.content,
-              updated_at: newMsg.created_at || new Date().toISOString(),
-              messages: [...c.messages, newMsg]
-            };
-          }
-          return c;
-        }));
-
-        if (activeChat && activeChat.id === newMsg.conversation_id) {
-          setActiveChat(prev => {
-            if (prev.messages.some(m => m.id === newMsg.id)) return prev;
-            return {
-              ...prev,
-              last_message: newMsg.content,
-              messages: [...prev.messages, newMsg]
-            };
-          });
-        }
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'conversations' }, payload => {
-        const newConv = payload.new;
-        setConversations(prev => {
-          if (prev.some(c => c.id === newConv.id)) return prev;
-          return [{ ...newConv, messages: newConv.messages || [] }, ...prev];
-        });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, payload => {
-        if (payload.eventType === 'INSERT') {
-          setListings(prev => {
-            const exists = prev.some(l => l.id === payload.new.id);
-            return exists ? prev : [payload.new, ...prev];
-          });
-        } else if (payload.eventType === 'UPDATE') {
-          setListings(prev => prev.map(l => l.id === payload.new.id ? payload.new : l));
-        } else if (payload.eventType === 'DELETE') {
-          setListings(prev => prev.filter(l => l.id !== payload.old.id));
-        }
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => fetchSupabaseData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => fetchSupabaseData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, () => fetchSupabaseData())
       .subscribe();
 
     return () => {
+      clearInterval(syncInterval);
       supabase.removeChannel(channel);
     };
-  }, [activeChat]);
+  }, [currentUser]);
 
-  // Persona Switcher (For testing as Buyer or Seller)
-  const switchPersona = (studentId) => {
-    const student = allStudents.find(s => s.id === studentId);
-    if (student) {
-      setCurrentUser(student);
-      addToast(`Switched active profile to ${student.full_name}`, 'success');
-    }
-  };
 
   // Authentication Handlers
   const signInWithGoogle = async () => {
@@ -464,7 +441,7 @@ export const AppProvider = ({ children }) => {
     addToast('Your student account and active listings have been permanently deleted.', 'info');
   };
 
-  const handleLogin = (email) => {
+  const handleLogin = async (email, sessionUser = null) => {
     const cleanEmail = (email || '').trim().toLowerCase();
 
     if (!cleanEmail.endsWith('@thapar.edu')) {
@@ -472,40 +449,58 @@ export const AppProvider = ({ children }) => {
       return false;
     }
 
-    const existing = allStudents.find(s => s.email.toLowerCase() === cleanEmail);
-    if (existing) {
-      setCurrentUser(existing);
-      setIsAuthOpen(false);
-      localStorage.setItem('notolx_view_mode', 'marketplace');
-      addToast(`Welcome back, ${existing.full_name}!`, 'success');
-      return true;
-    } else {
-      // Create new student profile for Thapar University
-      const namePart = cleanEmail.split('@')[0];
-      const formattedName = namePart.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
-      
-      const newStudent = {
-        id: `usr_${Date.now()}`,
-        email: cleanEmail,
-        full_name: formattedName || 'Thapar Student',
-        college_name: 'Thapar Institute of Engineering & Technology',
-        college_id: `TU-${Math.floor(1000 + Math.random() * 9000)}`,
-        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${namePart}`,
-        dorm_block: 'Thapar Hostel',
-        major: 'Engineering Student',
-        rating_avg: 5.0,
-        rating_count: 0,
-        verified: true,
-        joined_date: 'Just now'
-      };
+    const userId = sessionUser ? sessionUser.id : toUuid(`usr_${cleanEmail}`);
+    const namePart = cleanEmail.split('@')[0];
+    const formattedName = sessionUser?.user_metadata?.full_name || namePart.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
 
-      setAllStudents(prev => [...prev, newStudent]);
-      setCurrentUser(newStudent);
-      setIsAuthOpen(false);
-      localStorage.setItem('notolx_view_mode', 'marketplace');
-      addToast(`Account created! Verified student for Thapar Institute of Engineering & Technology`, 'success');
-      return true;
+    const studentProfile = {
+      id: userId,
+      email: cleanEmail,
+      full_name: formattedName || 'Thapar Student',
+      college_name: 'Thapar Institute of Engineering & Technology',
+      college_id: `TU-${userId.substring(0, 4).toUpperCase()}`,
+      avatar_url: sessionUser?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${namePart}`,
+      dorm_block: 'Thapar Hostel',
+      major: 'Engineering Student',
+      rating_avg: 5.0,
+      rating_count: 0,
+      verified: true,
+      joined_date: 'Just now'
+    };
+
+    setAllStudents(prev => {
+      const idx = prev.findIndex(s => s.email.toLowerCase() === cleanEmail);
+      if (idx !== -1) {
+        const copy = [...prev];
+        copy[idx] = { ...copy[idx], ...studentProfile };
+        return copy;
+      }
+      return [...prev, studentProfile];
+    });
+
+    setCurrentUser(studentProfile);
+    setIsAuthOpen(false);
+    localStorage.setItem('notolx_view_mode', 'marketplace');
+    addToast(`Welcome, ${studentProfile.full_name}! Verified @thapar.edu Student`, 'success');
+
+    // Upsert into Supabase public.profiles table to satisfy foreign key & RLS policies
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('profiles').upsert({
+          id: userId,
+          email: cleanEmail,
+          full_name: studentProfile.full_name,
+          college_name: studentProfile.college_name,
+          college_id: studentProfile.college_id,
+          avatar_url: studentProfile.avatar_url,
+          dorm_block: studentProfile.dorm_block
+        });
+      } catch (err) {
+        console.warn('Supabase profile upsert notice:', err);
+      }
     }
+
+    return true;
   };
 
   // Live Marketplace Listings Synchronization (Syncs listings across devices/users)
@@ -551,11 +546,11 @@ export const AppProvider = ({ children }) => {
       return false;
     }
 
-    const rawId = `prod_${Date.now()}`;
+    const listingId = generateUuid();
     const sellerId = currentUser.id;
 
     const newListing = {
-      id: rawId,
+      id: listingId,
       seller_id: sellerId,
       title: listingData.title,
       description: listingData.description,
@@ -584,17 +579,15 @@ export const AppProvider = ({ children }) => {
     // Sync to Supabase cloud if active
     if (isSupabaseConfigured && supabase) {
       try {
-        const supabasePayload = {
-          ...newListing,
-          id: toUuid(rawId),
-          seller_id: toUuid(sellerId)
-        };
-        const { error } = await supabase.from('listings').insert([supabasePayload]);
+        const { error } = await supabase.from('listings').insert([newListing]);
         if (error) {
-          console.warn('Supabase insert notice:', error.message);
+          console.error('Supabase listing insert error:', error.message);
+          addToast(`Cloud sync error: ${error.message}`, 'error');
+        } else {
+          addToast('Item listed live on campus marketplace!', 'success');
         }
       } catch (err) {
-        console.warn('Supabase insert error:', err);
+        console.error('Supabase listing insert exception:', err);
       }
     }
 
@@ -699,20 +692,24 @@ export const AppProvider = ({ children }) => {
     if (existingConv) {
       setActiveChat(existingConv);
     } else {
-      const clientMsgId = `msg_client_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const clientMsgId = generateUuid();
+      const convId = generateUuid();
+      const initialContent = `Hi! Is your ${product.title} still available for ₹${product.price}?`;
+
       const newConv = {
-        id: `conv_${Date.now()}`,
+        id: convId,
         product_id: product.id,
         buyer_id: currentUser.id,
         seller_id: product.seller_id,
-        last_message: `Hi, I'm interested in your ${product.title}`,
+        last_message: initialContent,
         updated_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
         messages: [
           {
             id: clientMsgId,
+            conversation_id: convId,
             sender_id: currentUser.id,
-            receiver_id: product.seller_id,
-            content: `Hi! Is your ${product.title} still available for ₹${product.price}?`,
+            content: initialContent,
             status: 'sent',
             created_at: new Date().toISOString()
           }
@@ -724,25 +721,23 @@ export const AppProvider = ({ children }) => {
 
       // Persist to Supabase or Express backend
       if (isSupabaseConfigured && supabase) {
-        supabase.from('conversations').insert({
+        supabase.from('conversations').insert([{
+          id: convId,
           product_id: product.id,
           buyer_id: currentUser.id,
           seller_id: product.seller_id,
-          last_message: newConv.last_message
-        }).then(({ error }) => {
-          if (error) console.error('Supabase conversation insert error:', error);
+          last_message: initialContent
+        }]).then(({ error }) => {
+          if (error) console.error('Supabase conversation insert notice:', error.message);
+          supabase.from('messages').insert([{
+            id: clientMsgId,
+            conversation_id: convId,
+            sender_id: currentUser.id,
+            content: initialContent
+          }]).then(({ error: msgErr }) => {
+            if (msgErr) console.error('Supabase initial message insert notice:', msgErr.message);
+          });
         });
-      } else {
-        fetch(`${getApiBaseUrl()}/api/conversations`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            product_id: product.id,
-            buyer_id: currentUser.id,
-            seller_id: product.seller_id,
-            initial_message: newConv.messages[0].content
-          })
-        }).catch(err => console.error('Express conversation POST error:', err));
       }
     }
   };
@@ -763,11 +758,12 @@ export const AppProvider = ({ children }) => {
     }
 
     const receiverId = conv.buyer_id === currentUser.id ? conv.seller_id : conv.buyer_id;
-    const clientMsgId = `msg_${now}_${Math.random().toString(36).substring(2, 7)}`;
+    const clientMsgId = generateUuid();
 
     // 2. Add message with 'sent' status immediately to local state & cross-tab sync
     const optimisticMessage = {
       id: clientMsgId,
+      conversation_id: conversationId,
       sender_id: currentUser.id,
       receiver_id: receiverId,
       content: content.trim(),
@@ -822,22 +818,26 @@ export const AppProvider = ({ children }) => {
     // 3. Sync to Supabase or Express backend DB (graceful fallback)
     if (isSupabaseConfigured && supabase) {
       try {
-        const { error } = await supabase.from('messages').insert({
+        const { error } = await supabase.from('messages').insert([{
           id: clientMsgId,
           conversation_id: conversationId,
           sender_id: currentUser.id,
-          receiver_id: receiverId,
           content: content.trim(),
           offer_price: offerPrice ? parseFloat(offerPrice) : null,
-          meetup_spot: meetupSpot,
-          status: 'sent'
-        });
+          meetup_spot: meetupSpot || null
+        }]);
+
+        await supabase.from('conversations').update({
+          last_message: content.trim(),
+          updated_at: new Date().toISOString()
+        }).eq('id', conversationId);
+
         if (error) {
-          console.warn('Supabase remote insert info (using local fallback):', error.message || error);
+          console.warn('Supabase remote insert notice:', error.message || error);
         }
         updateMsgStatus(clientMsgId, 'sent');
       } catch (err) {
-        console.warn('Supabase real-time send info (using local fallback):', err);
+        console.warn('Supabase real-time send exception:', err);
         updateMsgStatus(clientMsgId, 'sent');
       }
     } else {
@@ -908,7 +908,11 @@ export const AppProvider = ({ children }) => {
       item.campus_location.toLowerCase().includes(searchQuery.toLowerCase());
 
     // Category Filter
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' 
+      ? true 
+      : selectedCategory === 'my_listings'
+      ? item.seller_id === currentUser?.id
+      : item.category === selectedCategory;
 
     // Condition Filter
     const matchesCondition = selectedCondition === 'all' || item.condition === selectedCondition;
@@ -930,7 +934,6 @@ export const AppProvider = ({ children }) => {
         // Auth & User
         currentUser,
         allStudents,
-        switchPersona,
         handleLogin,
         signInWithGoogle,
         handleLogout,
@@ -967,6 +970,8 @@ export const AppProvider = ({ children }) => {
         // Modals
         isCreateListingOpen,
         setIsCreateListingOpen,
+        isMyListingsOpen,
+        setIsMyListingsOpen,
         editingListing,
         setEditingListing,
         activeProductDetail,

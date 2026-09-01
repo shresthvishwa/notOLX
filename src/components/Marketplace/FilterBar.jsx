@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { CATEGORIES } from '../../data/mockData';
 import { 
   Sparkles, 
+  Tag,
   Calculator, 
   BookOpen, 
   Bike, 
@@ -15,6 +16,7 @@ import {
 
 const ICON_MAP = {
   Sparkles: Sparkles,
+  Tag: Tag,
   Calculator: Calculator,
   BookOpen: BookOpen,
   Bike: Bike,

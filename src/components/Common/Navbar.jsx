@@ -12,18 +12,20 @@ import {
   ShieldCheck,
   Sparkles,
   LogOut,
-  LogIn
+  LogIn,
+  Tag
 } from 'lucide-react';
 
 export const Navbar = () => {
   const { 
     currentUser, 
     allStudents, 
-    switchPersona, 
     searchQuery, 
     setSearchQuery, 
     setIsAuthOpen, 
     setIsCreateListingOpen, 
+    setIsMyListingsOpen,
+    rawListings,
     setIsProfileOpen,
     setActiveChat,
     conversations,
@@ -89,6 +91,29 @@ export const Navbar = () => {
             <PlusCircle size={18} />
             <span>Sell Item</span>
           </button>
+
+          {/* Dedicated My Selling Items Space Button */}
+          {currentUser && (
+            <button 
+              className="btn btn-secondary"
+              onClick={() => setIsMyListingsOpen(true)}
+              title="View & manage items posted by you"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <Tag size={17} color="var(--primary)" />
+              <span>My Selling Space</span>
+              <span style={{
+                backgroundColor: 'var(--primary-light)',
+                color: 'var(--primary)',
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                padding: '0.1rem 0.45rem',
+                borderRadius: 'var(--radius-full)'
+              }}>
+                {rawListings ? rawListings.filter(l => l.seller_id === currentUser.id).length : 0}
+              </span>
+            </button>
+          )}
 
           {/* Messages Notification Button & Dropdown */}
           <div style={{ position: 'relative' }}>
@@ -232,45 +257,37 @@ export const Navbar = () => {
                   width: '260px',
                   padding: '0.6rem'
                 }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', padding: '0.3rem 0.5rem', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <Sparkles size={12} color="var(--primary)" /> Switch Student Persona
+                  <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)', padding: '0.4rem 0.5rem 0.6rem' }}>
+                    {currentUser.full_name}
+                    <div style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--text-muted)' }}>{currentUser.email}</div>
                   </div>
 
-                  {allStudents.map(student => (
-                    <button
-                      key={student.id}
-                      onClick={() => {
-                        switchPersona(student.id);
-                        setIsPersonaMenuOpen(false);
-                      }}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '0.55rem',
-                        borderRadius: 'var(--radius-sm)',
-                        border: 'none',
-                        backgroundColor: currentUser.id === student.id ? 'var(--primary-light)' : 'transparent',
-                        color: 'var(--text-main)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.6rem',
-                        marginBottom: '0.2rem'
-                      }}
-                    >
-                      <img 
-                        src={student.avatar_url} 
-                        alt={student.full_name} 
-                        style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} 
-                      />
-                      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-                        <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{student.full_name}</span>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.major}</span>
-                      </div>
-                    </button>
-                  ))}
+                  <div style={{ borderTop: '1px solid var(--border-color)', margin: '0.2rem 0 0.5rem' }}></div>
 
-                  <div style={{ borderTop: '1px solid var(--border-color)', margin: '0.4rem 0' }}></div>
+                  <button
+                    onClick={() => {
+                      setIsMyListingsOpen(true);
+                      setIsPersonaMenuOpen(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '0.5rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: 'none',
+                      backgroundColor: 'var(--primary-light)',
+                      color: 'var(--primary)',
+                      fontWeight: 800,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      marginBottom: '0.25rem'
+                    }}
+                  >
+                    <Tag size={15} /> My Selling Space ({rawListings ? rawListings.filter(l => l.seller_id === currentUser?.id).length : 0})
+                  </button>
 
                   <button
                     onClick={() => {
@@ -293,7 +310,7 @@ export const Navbar = () => {
                       gap: '0.5rem'
                     }}
                   >
-                    <User size={15} /> View My Profile & Listings
+                    <User size={15} /> View My Profile & Reviews
                   </button>
 
                   <button
