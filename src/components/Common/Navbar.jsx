@@ -56,7 +56,7 @@ export const Navbar = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <a href="#" className="brand-logo" onClick={(e) => { e.preventDefault(); setSearchQuery(''); }}>
             <Building2 size={26} color="var(--primary)" />
-            <span>notOLX</span>
+            <span>notoLX</span>
             <span className="brand-badge">@thapar.edu</span>
           </a>
 

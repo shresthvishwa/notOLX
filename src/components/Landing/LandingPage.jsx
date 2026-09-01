@@ -44,7 +44,7 @@ export const LandingPage = ({ onExploreMarketplace }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Building2 size={28} color="var(--text-main)" />
             <span style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-              notOLX
+              notoLX
             </span>
             <span style={{ 
               backgroundColor: 'var(--noir-charcoal)', 
@@ -249,7 +249,7 @@ export const LandingPage = ({ onExploreMarketplace }) => {
       }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 800, color: 'var(--noir-silver)' }}>
-            <Building2 size={18} /> notOLX • Thapar University Marketplace
+            <Building2 size={18} /> notoLX • Thapar University Marketplace
           </div>
           <div>
             Built exclusively for TIET Students (@thapar.edu) • Gothic Noir Aesthetic

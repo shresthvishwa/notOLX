@@ -256,7 +256,7 @@ export const AppProvider = ({ children }) => {
         const userEmail = session.user.email || '';
         if (!isThaparEmail(userEmail)) {
           await supabase.auth.signOut();
-          addToast('Access Denied: Only @thapar.edu email accounts are permitted on notOLX.', 'error');
+          addToast('Access Denied: Only @thapar.edu email accounts are permitted on notoLX.', 'error');
           setIsAuthOpen(true);
           setViewMode('landing');
         } else {

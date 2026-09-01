@@ -195,7 +195,7 @@ const MarketplaceView = ({ onBackToLanding }) => {
       }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 800, color: 'var(--noir-silver)' }}>
-            <Building2 size={18} /> notOLX • Thapar University Marketplace
+            <Building2 size={18} /> notoLX • Thapar University Marketplace
           </div>
           <div>
             Built for TIET Students (@thapar.edu) • Gothic Noir Aesthetic
