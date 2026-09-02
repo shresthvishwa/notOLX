@@ -3,14 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { X, Upload, Plus, Image as ImageIcon, Camera, Check } from 'lucide-react';
 import { CATEGORIES } from '../../data/mockData';
 
-const PRESET_IMAGES = [
-  { label: 'Calculator', url: 'https://images.unsplash.com/photo-1611125832047-1d7ad1e8e48e?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Bicycle', url: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Textbook', url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Tech Mouse', url: 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Lab Coat', url: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Mini Fridge', url: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=800&q=80' }
-];
+const DEFAULT_PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80';
 
 export const CreateEditListingModal = () => {
   const { 
@@ -92,12 +85,6 @@ export const CreateEditListingModal = () => {
     e.target.value = null;
   };
 
-  const handleAddPresetImage = (url) => {
-    if (url) {
-      setImagesList(prev => [...prev, url]);
-    }
-  };
-
   const handleRemoveImage = (index) => {
     setImagesList(prev => prev.filter((_, idx) => idx !== index));
   };
@@ -111,7 +98,7 @@ export const CreateEditListingModal = () => {
 
     const payload = {
       ...formData,
-      images: imagesList.length > 0 ? imagesList : [PRESET_IMAGES[0].url]
+      images: imagesList.length > 0 ? imagesList : [DEFAULT_PLACEHOLDER_IMAGE]
     };
 
     if (editingListing) {
@@ -240,24 +227,7 @@ export const CreateEditListingModal = () => {
             <label className="form-label">Product Images</label>
             
             {/* Quick Sample Image Presets */}
-            <div style={{ marginBottom: '0.75rem' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
-                Quick photo presets for fast testing:
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                {PRESET_IMAGES.map((preset, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => handleAddPresetImage(preset.url)}
-                    style={{ fontSize: '0.75rem' }}
-                  >
-                    <Plus size={12} /> {preset.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+
 
             {/* Device Image Upload Area */}
             <div>
