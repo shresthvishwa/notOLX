@@ -37,7 +37,7 @@ const writeDB = (data) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    server: 'notOLX Thapar Campus Backend',
+    server: 'notoLX Thapar Campus Backend',
     university: 'Thapar Institute of Engineering & Technology (@thapar.edu)',
     port: PORT,
     timestamp: new Date().toISOString()
@@ -273,7 +273,7 @@ app.post('/api/reviews', (req, res) => {
 
 // Start Express Server
 app.listen(PORT, () => {
-  console.log(`🚀 notOLX Express Backend Server running on http://localhost:${PORT}`);
+  console.log(`🚀 notoLX Express Backend Server running on http://localhost:${PORT}`);
   console.log(`📌 Health check: http://localhost:${PORT}/api/health`);
   console.log(`📌 Campus API: http://localhost:${PORT}/api/listings`);
 });

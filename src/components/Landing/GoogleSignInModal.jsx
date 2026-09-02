@@ -24,21 +24,6 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
     }
   };
 
-  const handleSelectPreVerified = (email) => {
-    if (!isThaparEmail(email)) {
-      setErrorMsg('Access Denied: Only @thapar.edu Google email accounts are permitted.');
-      return;
-    }
-    setErrorMsg('');
-    setIsSigningIn(true);
-    setTimeout(() => {
-      setIsSigningIn(false);
-      handleLogin(email);
-      onClose();
-      if (onAuthenticated) onAuthenticated();
-    }, 500);
-  };
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div 
@@ -135,48 +120,6 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
             </svg>
             <span>Sign in with @thapar.edu Google Account</span>
           </button>
-
-          {/* Quick Select Demo Accounts */}
-          <div style={{ marginBottom: '1.25rem' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--noir-taupe)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-              Choose a Thapar Student Google Account:
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              {allStudents.map(student => (
-                <button
-                  key={student.id}
-                  type="button"
-                  disabled={isSigningIn}
-                  onClick={() => handleSelectPreVerified(student.email)}
-                  style={{
-                    padding: '0.6rem 0.85rem',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--bg-input)',
-                    color: 'var(--text-main)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    textAlign: 'left',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--noir-silver)'}
-                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                    <img src={student.avatar_url} alt="user" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{student.full_name}</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{student.email}</div>
-                    </div>
-                  </div>
-                  <ArrowRight size={14} color="var(--noir-taupe)" />
-                </button>
-              ))}
-            </div>
-          </div>
 
         </div>
       </div>

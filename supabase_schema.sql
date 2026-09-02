@@ -1,4 +1,4 @@
--- Supabase Schema for notOLX (Campus Second-Hand Marketplace)
+-- Supabase Schema for notoLX (Campus Second-Hand Marketplace)
 
 -- 1. PROFILES TABLE (Student Profiles)
 CREATE TABLE IF NOT EXISTS public.profiles (
