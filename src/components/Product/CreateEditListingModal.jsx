@@ -3,14 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { X, Upload, Plus, Image as ImageIcon, Camera, Check } from 'lucide-react';
 import { CATEGORIES } from '../../data/mockData';
 
-const PRESET_IMAGES = [
-  { label: 'Calculator', url: 'https://images.unsplash.com/photo-1611125832047-1d7ad1e8e48e?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Bicycle', url: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Textbook', url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Tech Mouse', url: 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Lab Coat', url: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80' },
-  { label: 'Mini Fridge', url: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=800&q=80' }
-];
+const DEFAULT_PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80';
 
 export const CreateEditListingModal = () => {
   const { 
@@ -73,12 +66,23 @@ export const CreateEditListingModal = () => {
     setEditingListing(null);
   };
 
-  const handleAddImageUrl = (urlToAdd) => {
-    const url = urlToAdd || formData.imageUrlInput;
-    if (url && url.trim()) {
-      setImagesList(prev => [...prev, url.trim()]);
-      setFormData(prev => ({ ...prev, imageUrlInput: '' }));
-    }
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    files.forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        const base64DataUrl = uploadEvent.target.result;
+        if (base64DataUrl) {
+          setImagesList(prev => [...prev, base64DataUrl]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    e.target.value = null;
   };
 
   const handleRemoveImage = (index) => {
@@ -94,7 +98,7 @@ export const CreateEditListingModal = () => {
 
     const payload = {
       ...formData,
-      images: imagesList.length > 0 ? imagesList : [PRESET_IMAGES[0].url]
+      images: imagesList.length > 0 ? imagesList : [DEFAULT_PLACEHOLDER_IMAGE]
     };
 
     if (editingListing) {
@@ -223,41 +227,41 @@ export const CreateEditListingModal = () => {
             <label className="form-label">Product Images</label>
             
             {/* Quick Sample Image Presets */}
-            <div style={{ marginBottom: '0.6rem' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
-                Quick photo presets for fast testing:
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                {PRESET_IMAGES.map((preset, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => handleAddImageUrl(preset.url)}
-                    style={{ fontSize: '0.75rem' }}
-                  >
-                    <Plus size={12} /> {preset.label}
-                  </button>
-                ))}
-              </div>
-            </div>
 
-            {/* Custom URL Input */}
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input 
-                type="url" 
-                className="form-input"
-                placeholder="Paste image URL (https://...)"
-                value={formData.imageUrlInput}
-                onChange={(e) => setFormData(prev => ({ ...prev, imageUrlInput: e.target.value }))}
-              />
-              <button 
-                type="button"
+
+            {/* Device Image Upload Area */}
+            <div>
+              <label 
+                htmlFor="device-file-upload" 
                 className="btn btn-secondary"
-                onClick={() => handleAddImageUrl()}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  gap: '0.5rem', 
+                  cursor: 'pointer',
+                  padding: '0.65rem 1rem',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  backgroundColor: 'var(--bg-input)',
+                  border: '1.5px dashed var(--primary)',
+                  color: 'var(--text-main)',
+                  borderRadius: 'var(--radius-md)',
+                  width: '100%',
+                  transition: 'all 0.2s ease'
+                }}
               >
-                Add Image
-              </button>
+                <Upload size={18} color="var(--primary)" />
+                <span>Upload Image from Device</span>
+              </label>
+              <input 
+                id="device-file-upload"
+                type="file" 
+                accept="image/*" 
+                multiple
+                style={{ display: 'none' }}
+                onChange={handleFileUpload}
+              />
             </div>
 
             {/* Image Preview Thumbnails */}
