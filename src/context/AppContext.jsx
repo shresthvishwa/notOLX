@@ -654,23 +654,49 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const markListingStatus = (id, status) => {
-    setListings(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+  const markListingStatus = async (id, status) => {
+    setListings(prev => {
+      const updated = prev.map(item => item.id === id ? { ...item, status } : item);
+      localStorage.setItem('notolx_listings', JSON.stringify(updated));
+      return updated;
+    });
+
     if (activeProductDetail && activeProductDetail.id === id) {
-      setActiveProductDetail(prev => ({ ...prev, status }));
+      setActiveProductDetail(prev => (prev ? { ...prev, status } : null));
     }
     
     if (status === 'sold') {
       confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
       addToast('Item marked as SOLD! Deal complete 🎉', 'success');
       
-      // Trigger review modal if transacted item was bought by active user or sold by active user
       const targetListing = listings.find(l => l.id === id);
       if (targetListing) {
         setReviewPendingProduct(targetListing);
       }
     } else if (status === 'reserved') {
       addToast('Item marked as RESERVED for buyer', 'info');
+    } else if (status === 'available') {
+      addToast('Item marked as AVAILABLE again', 'info');
+    }
+
+    // Persist to Supabase cloud if active
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('listings').update({ status }).eq('id', toUuid(id));
+      } catch (err) {
+        console.warn('Supabase status update error:', err);
+      }
+    }
+
+    // Persist to Express backend so live 3-second polling retains updated status
+    try {
+      await fetch(`${getApiBaseUrl()}/api/listings/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+    } catch (err) {
+      console.warn('Express listing status PUT error:', err);
     }
   };
 

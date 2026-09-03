@@ -279,12 +279,19 @@ export const ProductDetailModal = () => {
                       </button>
                     )}
 
-                    {product.status !== 'sold' && (
+                    {product.status !== 'sold' ? (
                       <button 
                         className="btn btn-primary btn-sm"
                         onClick={() => markListingStatus(product.id, 'sold')}
                       >
                         <CheckCircle2 size={14} /> Mark Sold
+                      </button>
+                    ) : (
+                      <button 
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => markListingStatus(product.id, 'available')}
+                      >
+                        <CheckCircle2 size={14} /> Re-list Item
                       </button>
                     )}
                   </div>
