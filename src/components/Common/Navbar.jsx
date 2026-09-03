@@ -13,7 +13,8 @@ import {
   Sparkles,
   LogOut,
   LogIn,
-  Tag
+  Tag,
+  X
 } from 'lucide-react';
 
 export const Navbar = () => {
@@ -70,15 +71,37 @@ export const Navbar = () => {
         </div>
 
         {/* Global Search Bar */}
-        <div className="search-container">
+        <div className="search-container" style={{ position: 'relative' }}>
           <Search size={18} className="search-icon" />
           <input
             type="text"
             className="search-input"
-            placeholder="Search Casio, cycles, textbooks, lab coats at Thapar..."
+            placeholder="Smart Search: Casio, cycle, bike, DSA books, fridge..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              style={{
+                position: 'absolute',
+                right: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '2px'
+              }}
+              title="Clear search"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
 
         {/* Action Controls & User Account */}

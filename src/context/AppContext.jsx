@@ -8,6 +8,7 @@ import {
 } from '../data/mockData';
 import { supabase, isSupabaseConfigured, isThaparEmail } from '../lib/supabase';
 import confetti from 'canvas-confetti';
+import { filterAndSortSmartListings } from '../utils/smartSearch';
 
 const AppContext = createContext();
 
@@ -925,34 +926,16 @@ export const AppProvider = ({ children }) => {
     addToast('Review & Rating submitted! Thank you for strengthening campus trust.', 'success');
   };
 
-  // Filtered & Sorted Listings Computation
-  const filteredListings = listings.filter(item => {
-    // Search Filter
-    const matchesSearch = searchQuery === '' || 
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.campus_location.toLowerCase().includes(searchQuery.toLowerCase());
-
-    // Category Filter
-    const matchesCategory = selectedCategory === 'all' 
-      ? true 
-      : selectedCategory === 'my_listings'
-      ? item.seller_id === currentUser?.id
-      : item.category === selectedCategory;
-
-    // Condition Filter
-    const matchesCondition = selectedCondition === 'all' || item.condition === selectedCondition;
-
-    // Price Range Filter
-    const matchesPrice = item.price >= priceRange.min && item.price <= priceRange.max;
-
-    return matchesSearch && matchesCategory && matchesCondition && matchesPrice;
-  }).sort((a, b) => {
-    if (sortBy === 'price-low') return a.price - b.price;
-    if (sortBy === 'price-high') return b.price - a.price;
-    if (sortBy === 'popular') return (b.views_count || 0) - (a.views_count || 0);
-    return new Date(b.created_at) - new Date(a.created_at); // newest
-  });
+  // Filtered & Sorted Listings Computation (Smart Search Engine)
+  const filteredListings = filterAndSortSmartListings(
+    listings,
+    searchQuery,
+    selectedCategory,
+    selectedCondition,
+    priceRange,
+    sortBy,
+    currentUser
+  );
 
   return (
     <AppContext.Provider
