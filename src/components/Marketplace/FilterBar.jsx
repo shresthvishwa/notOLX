@@ -86,11 +86,14 @@ export const FilterBar = () => {
               backgroundColor: 'var(--primary-light)', 
               color: 'var(--primary)', 
               fontSize: '0.78rem', 
-              fontWeight: 700, 
-              padding: '0.15rem 0.5rem', 
-              borderRadius: 'var(--radius-full)' 
+              fontWeight: 800, 
+              padding: '0.15rem 0.6rem', 
+              borderRadius: 'var(--radius-full)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.3rem'
             }}>
-              "{searchQuery}"
+              ✨ Smart Match: "{searchQuery}"
             </span>
           )}
         </div>

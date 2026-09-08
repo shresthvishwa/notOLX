@@ -324,7 +324,7 @@ export const MySellingItemsModal = () => {
                         </button>
                       )}
 
-                      {item.status !== 'sold' && (
+                      {item.status !== 'sold' ? (
                         <button
                           className="btn btn-primary btn-sm"
                           onClick={() => markListingStatus(item.id, 'sold')}
@@ -332,6 +332,15 @@ export const MySellingItemsModal = () => {
                           style={{ fontSize: '0.78rem' }}
                         >
                           <PackageCheck size={13} /> Mark Sold
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => markListingStatus(item.id, 'available')}
+                          title="Re-list item as Available"
+                          style={{ fontSize: '0.78rem' }}
+                        >
+                          Re-list
                         </button>
                       )}
 

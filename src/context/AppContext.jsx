@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { MOCK_COLLEGES } from '../data/mockData';
 import { supabase, isSupabaseConfigured, isThaparEmail } from '../lib/supabase';
 import confetti from 'canvas-confetti';
+import { filterAndSortSmartListings } from '../utils/smartSearch';
 
 const AppContext = createContext();
 
@@ -663,23 +664,49 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const markListingStatus = (id, status) => {
-    setListings(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+  const markListingStatus = async (id, status) => {
+    setListings(prev => {
+      const updated = prev.map(item => item.id === id ? { ...item, status } : item);
+      localStorage.setItem('notolx_listings', JSON.stringify(updated));
+      return updated;
+    });
+
     if (activeProductDetail && activeProductDetail.id === id) {
-      setActiveProductDetail(prev => ({ ...prev, status }));
+      setActiveProductDetail(prev => (prev ? { ...prev, status } : null));
     }
     
     if (status === 'sold') {
       confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
       addToast('Item marked as SOLD! Deal complete 🎉', 'success');
       
-      // Trigger review modal if transacted item was bought by active user or sold by active user
       const targetListing = listings.find(l => l.id === id);
       if (targetListing) {
         setReviewPendingProduct(targetListing);
       }
     } else if (status === 'reserved') {
       addToast('Item marked as RESERVED for buyer', 'info');
+    } else if (status === 'available') {
+      addToast('Item marked as AVAILABLE again', 'info');
+    }
+
+    // Persist to Supabase cloud if active
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('listings').update({ status }).eq('id', toUuid(id));
+      } catch (err) {
+        console.warn('Supabase status update error:', err);
+      }
+    }
+
+    // Persist to Express backend so live 3-second polling retains updated status
+    try {
+      await fetch(`${getApiBaseUrl()}/api/listings/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+    } catch (err) {
+      console.warn('Express listing status PUT error:', err);
     }
   };
 
@@ -908,34 +935,16 @@ export const AppProvider = ({ children }) => {
     addToast('Review & Rating submitted! Thank you for strengthening campus trust.', 'success');
   };
 
-  // Filtered & Sorted Listings Computation
-  const filteredListings = listings.filter(item => {
-    // Search Filter
-    const matchesSearch = searchQuery === '' || 
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.campus_location.toLowerCase().includes(searchQuery.toLowerCase());
-
-    // Category Filter
-    const matchesCategory = selectedCategory === 'all' 
-      ? true 
-      : selectedCategory === 'my_listings'
-      ? item.seller_id === currentUser?.id
-      : item.category === selectedCategory;
-
-    // Condition Filter
-    const matchesCondition = selectedCondition === 'all' || item.condition === selectedCondition;
-
-    // Price Range Filter
-    const matchesPrice = item.price >= priceRange.min && item.price <= priceRange.max;
-
-    return matchesSearch && matchesCategory && matchesCondition && matchesPrice;
-  }).sort((a, b) => {
-    if (sortBy === 'price-low') return a.price - b.price;
-    if (sortBy === 'price-high') return b.price - a.price;
-    if (sortBy === 'popular') return (b.views_count || 0) - (a.views_count || 0);
-    return new Date(b.created_at) - new Date(a.created_at); // newest
-  });
+  // Filtered & Sorted Listings Computation (Smart Search Engine)
+  const filteredListings = filterAndSortSmartListings(
+    listings,
+    searchQuery,
+    selectedCategory,
+    selectedCondition,
+    priceRange,
+    sortBy,
+    currentUser
+  );
 
   return (
     <AppContext.Provider
