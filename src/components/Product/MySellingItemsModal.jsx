@@ -12,7 +12,8 @@ import {
   MapPin, 
   Sparkles,
   PackageCheck,
-  AlertCircle
+  AlertCircle,
+  Star
 } from 'lucide-react';
 
 export const MySellingItemsModal = () => {
@@ -25,7 +26,8 @@ export const MySellingItemsModal = () => {
     setEditingListing, 
     deleteListing, 
     markListingStatus,
-    setIsAuthOpen 
+    setIsAuthOpen,
+    setReviewPendingProduct
   } = useApp();
 
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'available', 'reserved', 'sold'
@@ -334,14 +336,27 @@ export const MySellingItemsModal = () => {
                           <PackageCheck size={13} /> Mark Sold
                         </button>
                       ) : (
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => markListingStatus(item.id, 'available')}
-                          title="Re-list item as Available"
-                          style={{ fontSize: '0.78rem' }}
-                        >
-                          Re-list
-                        </button>
+                        <>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => markListingStatus(item.id, 'available')}
+                            title="Re-list item as Available"
+                            style={{ fontSize: '0.78rem' }}
+                          >
+                            Re-list
+                          </button>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => {
+                              setIsMyListingsOpen(false);
+                              setReviewPendingProduct(item);
+                            }}
+                            style={{ fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}
+                            title="Rate Buyer for this completed deal"
+                          >
+                            <Star size={12} fill="#f59e0b" color="#f59e0b" /> Rate Buyer
+                          </button>
+                        </>
                       )}
 
                       {/* Edit */}

@@ -9,7 +9,8 @@ import {
   ShieldCheck, 
   Building2, 
   Clock,
-  Sparkles
+  Sparkles,
+  Star
 } from 'lucide-react';
 import { MOCK_MEETUP_SPOTS } from '../../data/mockData';
 
@@ -22,7 +23,8 @@ export const ChatModal = () => {
     currentUser, 
     allStudents, 
     rawListings,
-    markListingStatus
+    markListingStatus,
+    setReviewPendingProduct
   } = useApp();
 
   const [messageInput, setMessageInput] = useState('');
@@ -211,6 +213,16 @@ export const ChatModal = () => {
                   Confirm Sale
                 </button>
               )}
+
+              <button 
+                className="btn btn-secondary btn-sm"
+                onClick={() => setReviewPendingProduct({ ...product, buyer_id: conversation.buyer_id })}
+                style={{ padding: '0.15rem 0.55rem', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                title="Rate your trading partner for this campus deal"
+              >
+                <Star size={12} fill="#f59e0b" color="#f59e0b" />
+                <span>Rate Trade</span>
+              </button>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

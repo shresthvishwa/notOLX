@@ -900,31 +900,34 @@ export const AppProvider = ({ children }) => {
   };
 
   // Review Handlers
-  const submitReview = ({ product_id, reviewee_id, rating, comment, tags }) => {
+  const submitReview = async ({ product_id, reviewee_id, rating, comment, tags }) => {
+    if (!currentUser || !currentUser.id || !reviewee_id) return;
+
+    const reviewId = generateUuid();
     const newReview = {
-      id: `rev_${Date.now()}`,
-      product_id,
+      id: reviewId,
+      product_id: toUuid(product_id),
       reviewer_id: currentUser.id,
-      reviewee_id,
+      reviewee_id: reviewee_id,
       rating: parseInt(rating),
-      comment,
+      comment: comment ? comment.trim() : '',
       tags: tags || [],
       created_at: new Date().toISOString()
     };
 
-    setReviews(prev => [newReview, ...prev]);
+    setReviews(prev => [newReview, ...prev.filter(r => !(r.product_id === product_id && r.reviewer_id === currentUser.id))]);
 
-    // Update target student's aggregate rating
+    // Update target student's aggregate rating in local state
+    const targetStudentReviews = [...reviews.filter(r => r.reviewee_id === reviewee_id && r.id !== reviewId), newReview];
+    const newTotalCount = targetStudentReviews.length;
+    const newSum = targetStudentReviews.reduce((sum, r) => sum + r.rating, 0);
+    const newAvg = parseFloat((newSum / newTotalCount).toFixed(1));
+
     setAllStudents(prev => prev.map(student => {
       if (student.id === reviewee_id) {
-        const studentReviews = reviews.filter(r => r.reviewee_id === reviewee_id);
-        const newTotalCount = studentReviews.length + 1;
-        const newSum = studentReviews.reduce((sum, r) => sum + r.rating, 0) + parseInt(rating);
-        const newAvg = (newSum / newTotalCount).toFixed(1);
-
         return {
           ...student,
-          rating_avg: parseFloat(newAvg),
+          rating_avg: newAvg,
           rating_count: newTotalCount
         };
       }
@@ -933,6 +936,36 @@ export const AppProvider = ({ children }) => {
 
     setReviewPendingProduct(null);
     addToast('Review & Rating submitted! Thank you for strengthening campus trust.', 'success');
+
+    // Sync to Supabase Cloud Database if active
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error: revErr } = await supabase.from('reviews').insert([{
+          id: reviewId,
+          product_id: toUuid(product_id),
+          reviewer_id: currentUser.id,
+          reviewee_id: reviewee_id,
+          rating: parseInt(rating),
+          comment: comment ? comment.trim() : '',
+          tags: tags || []
+        }]);
+
+        if (revErr) {
+          console.warn('Supabase review insert notice:', revErr.message);
+        }
+
+        const { error: profErr } = await supabase.from('profiles').update({
+          rating_avg: newAvg,
+          rating_count: newTotalCount
+        }).eq('id', reviewee_id);
+
+        if (profErr) {
+          console.warn('Supabase profile rating update notice:', profErr.message);
+        }
+      } catch (err) {
+        console.warn('Supabase review sync exception:', err);
+      }
+    }
   };
 
   // Filtered & Sorted Listings Computation (Smart Search Engine)

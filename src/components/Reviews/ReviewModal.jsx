@@ -17,6 +17,7 @@ export const ReviewModal = () => {
     setReviewPendingProduct, 
     currentUser, 
     allStudents, 
+    conversations,
     submitReview 
   } = useApp();
 
@@ -25,14 +26,29 @@ export const ReviewModal = () => {
   const [comment, setComment] = useState('');
   const [selectedTags, setSelectedTags] = useState(['Punctual', 'Item as described']);
 
-  if (!reviewPendingProduct) return null;
+  if (!reviewPendingProduct || !currentUser) return null;
 
+  const targetConv = conversations.find(c => c.product_id === reviewPendingProduct.id);
   const isSeller = currentUser.id === reviewPendingProduct.seller_id;
-  const revieweeId = isSeller ? 'usr_1' : reviewPendingProduct.seller_id; // Default partner
+
+  let revieweeId = null;
+  if (isSeller) {
+    revieweeId = targetConv?.buyer_id || reviewPendingProduct.buyer_id;
+  } else {
+    revieweeId = reviewPendingProduct.seller_id;
+  }
+
+  // Fallback to any partner in conversation or listing seller
+  if (!revieweeId || revieweeId === currentUser.id) {
+    revieweeId = isSeller 
+      ? (targetConv?.buyer_id || (allStudents.find(s => s.id !== currentUser.id)?.id)) 
+      : reviewPendingProduct.seller_id;
+  }
+
   const reviewee = allStudents.find(s => s.id === revieweeId) || {
-    full_name: 'Student Partner',
+    full_name: isSeller ? 'Student Buyer' : 'Student Seller',
     avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-    college_name: 'Stanford University'
+    college_name: 'Thapar Institute of Engineering & Technology'
   };
 
   const toggleTag = (tag) => {
@@ -45,6 +61,10 @@ export const ReviewModal = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!revieweeId) {
+      alert('Trade partner profile not found.');
+      return;
+    }
     submitReview({
       product_id: reviewPendingProduct.id,
       reviewee_id: revieweeId,
@@ -76,9 +96,11 @@ export const ReviewModal = () => {
               alt={reviewee.full_name} 
               style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 0.5rem auto' }}
             />
-            <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{reviewee.full_name}</div>
+            <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>
+              Rate {isSeller ? 'Buyer' : 'Seller'}: {reviewee.full_name}
+            </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Transaction for "{reviewPendingProduct.title}"
+              Campus Deal for "{reviewPendingProduct.title}"
             </div>
           </div>
 
