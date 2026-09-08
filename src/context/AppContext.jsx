@@ -1,11 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  MOCK_STUDENTS, 
-  MOCK_LISTINGS, 
-  MOCK_CONVERSATIONS, 
-  MOCK_REVIEWS, 
-  MOCK_COLLEGES 
-} from '../data/mockData';
+import { MOCK_COLLEGES } from '../data/mockData';
 import { supabase, isSupabaseConfigured, isThaparEmail } from '../lib/supabase';
 import confetti from 'canvas-confetti';
 
@@ -51,19 +45,38 @@ export const AppProvider = ({ children }) => {
   // Listings State
   const [listings, setListings] = useState(() => {
     const saved = localStorage.getItem('notolx_listings');
-    return saved ? JSON.parse(saved) : MOCK_LISTINGS;
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      // Filter out any legacy dummy products (e.g. prod_101)
+      return Array.isArray(parsed) ? parsed.filter(item => !String(item.id).startsWith('prod_10')) : [];
+    } catch {
+      return [];
+    }
   });
 
   // Conversations & Messages State
   const [conversations, setConversations] = useState(() => {
     const saved = localStorage.getItem('notolx_conversations');
-    return saved ? JSON.parse(saved) : MOCK_CONVERSATIONS;
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed.filter(c => !String(c.id).startsWith('conv_1') && !String(c.product_id).startsWith('prod_10')) : [];
+    } catch {
+      return [];
+    }
   });
 
   // Reviews State
   const [reviews, setReviews] = useState(() => {
     const saved = localStorage.getItem('notolx_reviews');
-    return saved ? JSON.parse(saved) : MOCK_REVIEWS;
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed.filter(r => !String(r.id).startsWith('rev_')) : [];
+    } catch {
+      return [];
+    }
   });
 
   // Theme State (Light Mode Default vs Dark Gothic Noir)
@@ -309,12 +322,8 @@ export const AppProvider = ({ children }) => {
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (dbListings && dbListings.length > 0) {
-          setListings(prev => {
-            const dbIds = new Set(dbListings.map(item => item.id));
-            const localOnly = prev.filter(item => !dbIds.has(item.id));
-            return [...dbListings, ...localOnly];
-          });
+        if (dbListings) {
+          setListings(dbListings);
         }
 
         // 2. Fetch Profiles for seller info
