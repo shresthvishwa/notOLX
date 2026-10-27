@@ -11,6 +11,8 @@ import { ReviewModal } from './components/Reviews/ReviewModal';
 import { AuthModal } from './components/Auth/AuthModal';
 import { ProfileModal } from './components/Profile/ProfileModal';
 import { MySellingItemsModal } from './components/Product/MySellingItemsModal';
+import { CreateItemRequestModal } from './components/Requests/CreateItemRequestModal';
+import { CampusRequestsModal } from './components/Requests/CampusRequestsModal';
 import { ToastContainer } from './components/Common/ToastContainer';
 import { 
   Building2, 
@@ -20,7 +22,8 @@ import {
   GraduationCap, 
   MessageSquare, 
   Star,
-  ArrowLeft
+  ArrowLeft,
+  BellPlus
 } from 'lucide-react';
 
 const MarketplaceView = ({ onBackToLanding }) => {
@@ -30,7 +33,9 @@ const MarketplaceView = ({ onBackToLanding }) => {
     searchQuery, 
     setSelectedCategory, 
     setSelectedCondition,
-    currentUser
+    currentUser,
+    setIsRequestModalOpen,
+    setPrefilledRequestQuery
   } = useApp();
 
   return (
@@ -116,15 +121,28 @@ const MarketplaceView = ({ onBackToLanding }) => {
             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
               {searchQuery ? `No items matching "${searchQuery}"` : 'Try clearing your category or condition filters'}
             </p>
-            <button 
-              className="btn btn-secondary" 
-              onClick={() => {
-                setSelectedCategory('all');
-                setSelectedCondition('all');
-              }}
-            >
-              Reset Filters
-            </button>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button 
+                className="btn btn-primary"
+                onClick={() => {
+                  setPrefilledRequestQuery(searchQuery || '');
+                  setIsRequestModalOpen(true);
+                }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}
+              >
+                <BellPlus size={16} />
+                <span>{searchQuery ? `Request "${searchQuery}" on Campus` : 'Post a Campus Item Request'}</span>
+              </button>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  setSelectedCategory('all');
+                  setSelectedCondition('all');
+                }}
+              >
+                Reset Filters
+              </button>
+            </div>
           </div>
         ) : (
           <div className="product-grid">
@@ -184,6 +202,8 @@ const MarketplaceView = ({ onBackToLanding }) => {
       <ReviewModal />
       <AuthModal />
       <ProfileModal />
+      <CreateItemRequestModal />
+      <CampusRequestsModal />
       <ToastContainer />
 
       {/* Footer */}

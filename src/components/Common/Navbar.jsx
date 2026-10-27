@@ -32,7 +32,9 @@ export const Navbar = () => {
     conversations,
     theme,
     toggleTheme,
-    handleLogout
+    handleLogout,
+    itemRequests,
+    setIsCampusRequestsBoardOpen
   } = useApp();
 
   const [isPersonaMenuOpen, setIsPersonaMenuOpen] = useState(false);
@@ -137,6 +139,29 @@ export const Navbar = () => {
               </span>
             </button>
           )}
+
+          {/* Campus Requests / Wanted Items Board */}
+          <button 
+            className="btn btn-secondary"
+            onClick={() => setIsCampusRequestsBoardOpen(true)}
+            title="Campus Requests - See what students are looking to buy"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <Sparkles size={17} color="var(--primary)" />
+            <span>Campus Requests</span>
+            {itemRequests && itemRequests.filter(r => r.status === 'active').length > 0 && (
+              <span style={{
+                backgroundColor: 'var(--primary-light)',
+                color: 'var(--primary)',
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                padding: '0.1rem 0.45rem',
+                borderRadius: 'var(--radius-full)'
+              }}>
+                {itemRequests.filter(r => r.status === 'active').length}
+              </span>
+            )}
+          </button>
 
           {/* Messages Notification Button & Dropdown */}
           <div style={{ position: 'relative' }}>

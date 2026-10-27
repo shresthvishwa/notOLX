@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { MOCK_COLLEGES } from '../data/mockData';
 import { supabase, isSupabaseConfigured, isThaparEmail } from '../lib/supabase';
 import confetti from 'canvas-confetti';
-import { filterAndSortSmartListings } from '../utils/smartSearch';
+import { filterAndSortSmartListings, calculateListingRelevanceScore } from '../utils/smartSearch';
 
 const AppContext = createContext();
 
@@ -55,6 +55,22 @@ export const AppProvider = ({ children }) => {
       return [];
     }
   });
+
+  // Campus Item Requests State (Wanted Items on Campus)
+  const [itemRequests, setItemRequests] = useState(() => {
+    const saved = localStorage.getItem('notolx_item_requests');
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [isCampusRequestsBoardOpen, setIsCampusRequestsBoardOpen] = useState(false);
+  const [prefilledRequestQuery, setPrefilledRequestQuery] = useState('');
 
   // Conversations & Messages State
   const [conversations, setConversations] = useState(() => {
@@ -157,6 +173,10 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('notolx_listings', JSON.stringify(listings));
   }, [listings]);
+
+  useEffect(() => {
+    localStorage.setItem('notolx_item_requests', JSON.stringify(itemRequests));
+  }, [itemRequests]);
 
   useEffect(() => {
     localStorage.setItem('notolx_conversations', JSON.stringify(conversations));
@@ -338,7 +358,17 @@ export const AppProvider = ({ children }) => {
           setReviews(dbReviews);
         }
 
-        // 3. Fetch Conversations & Messages for logged in user
+        // 3. Fetch Active Item Requests (Wanted Items)
+        const { data: dbRequests } = await supabase
+          .from('item_requests')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (dbRequests) {
+          setItemRequests(dbRequests.filter(r => r.status !== 'cancelled'));
+        }
+
+        // 4. Fetch Conversations & Messages for logged in user
         if (currentUser?.id) {
           const { data: dbConvs } = await supabase
             .from('conversations')
@@ -368,17 +398,35 @@ export const AppProvider = ({ children }) => {
       } catch (err) {
         console.warn('Supabase cross-device fetch warning:', err);
       }
+
+      // Also sync item requests from Express backend if active
+      try {
+        const reqRes = await fetch(`${getApiBaseUrl()}/api/item-requests`);
+        if (reqRes.ok) {
+          const reqJson = await reqRes.json();
+          if (reqJson && reqJson.requests) {
+            setItemRequests(prev => {
+              const remoteIds = new Set(reqJson.requests.map(r => r.id));
+              const localOnly = prev.filter(r => !remoteIds.has(r.id));
+              return [...reqJson.requests, ...localOnly];
+            });
+          }
+        }
+      } catch (apiErr) {
+        // quiet fallback
+      }
     };
 
     fetchSupabaseData();
     const syncInterval = setInterval(fetchSupabaseData, 2000);
 
-    // Supabase Realtime subscription for cross-device live messages & listings
+    // Supabase Realtime subscription for cross-device live messages, listings & item requests
     const channel = supabase
       .channel('public:notolx_realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => fetchSupabaseData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => fetchSupabaseData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, () => fetchSupabaseData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'item_requests' }, () => fetchSupabaseData())
       .subscribe();
 
     return () => {
@@ -610,6 +658,146 @@ export const AppProvider = ({ children }) => {
       });
     } catch (err) {
       console.warn('Express listing post error:', err);
+    }
+
+    // Check active campus requests and send email notifications if item matches
+    try {
+      const activeRequests = itemRequests.filter(req => req.status === 'active' && req.requester_id !== sellerId);
+      const newTitle = newListing.title.toLowerCase();
+
+      const matchedRequests = activeRequests.filter(req => {
+        const reqName = req.item_name.toLowerCase();
+        const score = calculateListingRelevanceScore(newListing, req.item_name);
+        const words = reqName.split(/\s+/).filter(w => w.length > 2);
+        const wordMatch = words.some(w => newTitle.includes(w));
+        return score > 20 || wordMatch;
+      });
+
+      if (matchedRequests.length > 0) {
+        matchedRequests.forEach(async (matchedReq) => {
+          try {
+            await fetch(`${getApiBaseUrl()}/api/notify-request-match`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                requester_email: matchedReq.requester_email,
+                requester_name: matchedReq.requester_name,
+                item_name: matchedReq.item_name,
+                listing: {
+                  id: newListing.id,
+                  title: newListing.title,
+                  price: newListing.price,
+                  campus_location: newListing.campus_location,
+                  condition: newListing.condition
+                }
+              })
+            });
+            addToast(`📢 Matched student request! Notification email sent to ${matchedReq.requester_name} (${matchedReq.requester_email})`, 'success');
+          } catch (notifyErr) {
+            console.warn('Notification email dispatch error:', notifyErr);
+          }
+        });
+      }
+    } catch (matchErr) {
+      console.warn('Error checking request matches:', matchErr);
+    }
+  };
+
+  // Campus Item Request Handlers (Wanted Items)
+  const addItemRequest = async (requestData) => {
+    if (!currentUser || !currentUser.id) {
+      addToast('Authentication required. Please sign in with your @thapar.edu email to request items.', 'error');
+      setIsAuthOpen(true);
+      return false;
+    }
+
+    const requestId = generateUuid();
+    const newRequest = {
+      id: requestId,
+      requester_id: currentUser.id,
+      requester_name: currentUser.full_name || 'Thapar Student',
+      requester_email: currentUser.email,
+      item_name: requestData.item_name.trim(),
+      category: requestData.category || 'all',
+      max_budget: requestData.max_budget ? parseFloat(requestData.max_budget) : null,
+      description: requestData.description || '',
+      campus_location: requestData.campus_location || `${currentUser?.dorm_block || 'Hostel'} / Main Quad`,
+      status: 'active',
+      created_at: new Date().toISOString()
+    };
+
+    setItemRequests(prev => [newRequest, ...prev]);
+    setIsRequestModalOpen(false);
+    confetti({ particleCount: 50, spread: 50, origin: { y: 0.6 } });
+    addToast('Item request posted! Campus community will see it & you\'ll receive an email if listed.', 'success');
+
+    // Sync to Supabase cloud if active
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase.from('item_requests').insert([newRequest]);
+        if (error) {
+          console.warn('Supabase request insert notice:', error.message);
+        }
+      } catch (err) {
+        console.warn('Supabase request insert exception:', err);
+      }
+    }
+
+    // Sync to Express backend server
+    try {
+      await fetch(`${getApiBaseUrl()}/api/item-requests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newRequest)
+      });
+    } catch (err) {
+      console.warn('Express item-request post error:', err);
+    }
+
+    return true;
+  };
+
+  const deleteItemRequest = async (id) => {
+    setItemRequests(prev => prev.filter(item => item.id !== id));
+    addToast('Item request removed', 'info');
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('item_requests').delete().eq('id', toUuid(id));
+      } catch (err) {
+        console.warn('Supabase request delete error:', err);
+      }
+    }
+
+    try {
+      await fetch(`${getApiBaseUrl()}/api/item-requests/${id}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.warn('Express request delete error:', err);
+    }
+  };
+
+  const fulfillItemRequest = async (id) => {
+    setItemRequests(prev => prev.map(item => item.id === id ? { ...item, status: 'fulfilled' } : item));
+    addToast('Item request marked as fulfilled! 🎉', 'success');
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('item_requests').update({ status: 'fulfilled' }).eq('id', toUuid(id));
+      } catch (err) {
+        console.warn('Supabase request fulfill error:', err);
+      }
+    }
+
+    try {
+      await fetch(`${getApiBaseUrl()}/api/item-requests/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'fulfilled' })
+      });
+    } catch (err) {
+      console.warn('Express request update error:', err);
     }
   };
 
@@ -1040,6 +1228,18 @@ export const AppProvider = ({ children }) => {
         submitReview,
         reviewPendingProduct,
         setReviewPendingProduct,
+
+        // Campus Item Requests (Wanted Items)
+        itemRequests,
+        addItemRequest,
+        deleteItemRequest,
+        fulfillItemRequest,
+        isRequestModalOpen,
+        setIsRequestModalOpen,
+        isCampusRequestsBoardOpen,
+        setIsCampusRequestsBoardOpen,
+        prefilledRequestQuery,
+        setPrefilledRequestQuery,
 
         // Toasts & Theme
         toasts,

@@ -154,6 +154,41 @@ DROP POLICY IF EXISTS "Anyone can insert reviews" ON public.reviews;
 CREATE POLICY "Anyone can insert reviews"
   ON public.reviews FOR INSERT WITH CHECK (true);
 
+
+-- 6. ITEM REQUESTS TABLE (Wanted Items on Campus)
+CREATE TABLE IF NOT EXISTS public.item_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  requester_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  requester_name TEXT NOT NULL,
+  requester_email TEXT NOT NULL,
+  item_name TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'all',
+  max_budget NUMERIC(10,2),
+  description TEXT,
+  campus_location TEXT,
+  status TEXT NOT NULL DEFAULT 'active', -- 'active', 'fulfilled', 'cancelled'
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.item_requests ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Item requests are viewable by anyone" ON public.item_requests;
+CREATE POLICY "Item requests are viewable by anyone"
+  ON public.item_requests FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Anyone can insert item requests" ON public.item_requests;
+CREATE POLICY "Anyone can insert item requests"
+  ON public.item_requests FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Anyone can update item requests" ON public.item_requests;
+CREATE POLICY "Anyone can update item requests"
+  ON public.item_requests FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Anyone can delete item requests" ON public.item_requests;
+CREATE POLICY "Anyone can delete item requests"
+  ON public.item_requests FOR DELETE USING (true);
+
+
 -- Safe Realtime Publication Setup
 DO $$
 BEGIN
@@ -177,4 +212,12 @@ BEGIN
   ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.listings;
   END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'item_requests'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.item_requests;
+  END IF;
 END $$;
+

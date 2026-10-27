@@ -3,6 +3,7 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import nodemailer from 'nodemailer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,10 +19,17 @@ app.use(express.json());
 const readDB = () => {
   try {
     const data = fs.readFileSync(DB_FILE, 'utf8');
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    return {
+      students: parsed.students || [],
+      listings: parsed.listings || [],
+      conversations: parsed.conversations || [],
+      reviews: parsed.reviews || [],
+      item_requests: parsed.item_requests || []
+    };
   } catch (err) {
     console.error('Error reading database file:', err);
-    return { students: [], listings: [], conversations: [], reviews: [] };
+    return { students: [], listings: [], conversations: [], reviews: [], item_requests: [] };
   }
 };
 
@@ -271,9 +279,191 @@ app.post('/api/reviews', (req, res) => {
   res.status(201).json({ success: true, review: newReview });
 });
 
+// ==========================================
+// 6. Campus Item Requests Endpoints (Wanted Items)
+// ==========================================
+app.get('/api/item-requests', (req, res) => {
+  const db = readDB();
+  const activeRequests = (db.item_requests || []).filter(r => r.status !== 'cancelled');
+  res.json({ count: activeRequests.length, requests: activeRequests });
+});
+
+app.post('/api/item-requests', (req, res) => {
+  const db = readDB();
+  const { requester_id, requester_name, requester_email, item_name, category, max_budget, description, campus_location } = req.body;
+
+  if (!requester_id || !requester_email || !item_name) {
+    return res.status(400).json({ error: 'Missing required request parameters (requester_id, requester_email, item_name).' });
+  }
+
+  const newRequest = {
+    id: req.body.id || `req_${Date.now()}`,
+    requester_id,
+    requester_name: requester_name || 'Thapar Student',
+    requester_email: requester_email.trim().toLowerCase(),
+    item_name: item_name.trim(),
+    category: category || 'all',
+    max_budget: max_budget ? parseFloat(max_budget) : null,
+    description: description || '',
+    campus_location: campus_location || 'Thapar Campus',
+    status: 'active',
+    created_at: new Date().toISOString()
+  };
+
+  db.item_requests = db.item_requests || [];
+  db.item_requests.unshift(newRequest);
+  writeDB(db);
+
+  res.status(201).json({ success: true, request: newRequest });
+});
+
+app.put('/api/item-requests/:id', (req, res) => {
+  const db = readDB();
+  db.item_requests = db.item_requests || [];
+  const index = db.item_requests.findIndex(r => r.id === req.params.id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: 'Item request not found.' });
+  }
+
+  db.item_requests[index] = { ...db.item_requests[index], ...req.body };
+  writeDB(db);
+  res.json({ success: true, request: db.item_requests[index] });
+});
+
+app.delete('/api/item-requests/:id', (req, res) => {
+  const db = readDB();
+  db.item_requests = (db.item_requests || []).filter(r => r.id !== req.params.id);
+  writeDB(db);
+  res.json({ success: true, message: 'Item request deleted successfully.' });
+});
+
+// ==========================================
+// 7. Automated Email Notification for Request Matches
+// ==========================================
+let cachedTransporter = null;
+const getTransporter = async () => {
+  if (cachedTransporter) return cachedTransporter;
+
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    cachedTransporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+    return cachedTransporter;
+  }
+
+  try {
+    const testAccount = await nodemailer.createTestAccount();
+    cachedTransporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass
+      }
+    });
+    return cachedTransporter;
+  } catch (err) {
+    console.warn('Fallback: Ethereal test account not available, logging email to stdout.');
+    return null;
+  }
+};
+
+app.post('/api/notify-request-match', async (req, res) => {
+  const { requester_email, requester_name, item_name, listing } = req.body;
+
+  if (!requester_email || !listing || !listing.title) {
+    return res.status(400).json({ error: 'Missing required parameters (requester_email, listing).' });
+  }
+
+  const subject = `🎒 [notoLX] Great news! "${listing.title}" is now available on campus!`;
+  const textContent = `Hi ${requester_name || 'Student'},\n\nYou recently requested "${item_name}" on notoLX.\n\nA fellow student just uploaded a matching item for selling:\n- Item: ${listing.title}\n- Price: ₹${listing.price}\n- Campus Location: ${listing.campus_location || 'Campus'}\n\nKindly check it out on notoLX (Campus Second-Hand Marketplace) before it gets reserved!\n\nBest regards,\nnotoLX Team @ Thapar Institute`;
+
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="color: #059669; margin: 0;">🎒 notoLX</h2>
+        <p style="color: #6b7280; font-size: 13px; margin: 4px 0 0 0;">Campus Second-Hand Marketplace • TIET Exclusive</p>
+      </div>
+
+      <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+        <h3 style="color: #111827; margin-top: 0;">Great news, ${requester_name || 'fellow student'}! 🎉</h3>
+        <p style="color: #374151; font-size: 15px; line-height: 1.5;">
+          You previously created a campus request for <strong>"${item_name}"</strong>.
+        </p>
+        <p style="color: #374151; font-size: 15px; line-height: 1.5;">
+          A student has just listed a matching item on the marketplace:
+        </p>
+
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin: 15px 0;">
+          <div style="font-size: 17px; font-weight: bold; color: #111827;">${listing.title}</div>
+          <div style="font-size: 16px; font-weight: bold; color: #059669; margin-top: 4px;">Selling Price: ₹${listing.price}</div>
+          <div style="font-size: 13px; color: #6b7280; margin-top: 4px;">📍 Campus Pickup: ${listing.campus_location || 'Campus Quad'}</div>
+          ${listing.condition ? `<div style="font-size: 13px; color: #6b7280;">Condition: ${listing.condition}</div>` : ''}
+        </div>
+
+        <p style="color: #374151; font-size: 14px; margin-top: 20px;">
+          Kindly check it out on <strong>notoLX</strong> now to chat with the seller before it gets reserved!
+        </p>
+
+        <div style="text-align: center; margin: 25px 0;">
+          <a href="${req.headers.origin || 'http://localhost:5173'}" style="background-color: #059669; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">
+            Open notoLX & View Listing →
+          </a>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 15px; color: #9ca3af; font-size: 12px;">
+        This notification was sent because you created an item request on notoLX (@thapar.edu).
+      </div>
+    </div>
+  `;
+
+  try {
+    const transporter = await getTransporter();
+    let previewUrl = null;
+
+    if (transporter) {
+      const info = await transporter.sendMail({
+        from: '"notoLX Campus Marketplace" <no-reply@notolx.thapar.edu>',
+        to: requester_email,
+        subject,
+        text: textContent,
+        html: htmlContent
+      });
+
+      previewUrl = nodemailer.getTestMessageUrl(info);
+      console.log(`📧 [EMAIL SENT] To: ${requester_email} | Subject: ${subject}`);
+      if (previewUrl) {
+        console.log(`🔗 [EMAIL PREVIEW URL]: ${previewUrl}`);
+      }
+    } else {
+      console.log(`📧 [SIMULATED EMAIL DISPATCH] To: ${requester_email}\nSubject: ${subject}\n${textContent}`);
+    }
+
+    res.json({
+      success: true,
+      message: 'Notification sent successfully',
+      recipient: requester_email,
+      previewUrl
+    });
+  } catch (err) {
+    console.error('Error dispatching email notification:', err);
+    res.status(500).json({ error: 'Failed to send notification email', details: err.message });
+  }
+});
+
 // Start Express Server
 app.listen(PORT, () => {
   console.log(`🚀 notoLX Express Backend Server running on http://localhost:${PORT}`);
   console.log(`📌 Health check: http://localhost:${PORT}/api/health`);
   console.log(`📌 Campus API: http://localhost:${PORT}/api/listings`);
+  console.log(`📌 Campus Requests: http://localhost:${PORT}/api/item-requests`);
 });
