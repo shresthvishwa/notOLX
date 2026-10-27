@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   X, 
@@ -110,10 +110,18 @@ export const CampusRequestsModal = () => {
               <input
                 type="text"
                 className="form-input"
-                style={{ paddingLeft: '32px', fontSize: '0.85rem' }}
+                style={{ 
+                  paddingLeft: '32px', 
+                  fontSize: '0.85rem',
+                  color: 'var(--text-main)',
+                  WebkitTextFillColor: 'var(--text-main)',
+                  caretColor: 'var(--primary)'
+                }}
                 placeholder="Search requested items, hostel, student..."
-                value={searchFilter}
+                value={searchFilter || ''}
                 onChange={(e) => setSearchFilter(e.target.value)}
+                autoComplete="off"
+                spellCheck="false"
               />
             </div>
 

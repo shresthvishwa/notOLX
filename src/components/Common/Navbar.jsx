@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Building2, 
@@ -39,6 +39,23 @@ export const Navbar = () => {
 
   const [isPersonaMenuOpen, setIsPersonaMenuOpen] = useState(false);
   const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
+  const [localSearch, setLocalSearch] = useState(searchQuery || '');
+
+  // Synchronize local search with AppContext searchQuery
+  useEffect(() => {
+    setLocalSearch(searchQuery || '');
+  }, [searchQuery]);
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setLocalSearch(val);
+    setSearchQuery(val);
+  };
+
+  const handleClearSearch = () => {
+    setLocalSearch('');
+    setSearchQuery('');
+  };
 
   // Match conversations for current user by ID or Email (fallback to all conversations)
   const userConvs = currentUser ? conversations.filter(c => {
@@ -59,7 +76,7 @@ export const Navbar = () => {
       <div className="navbar-inner">
         {/* Brand Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <a href="#" className="brand-logo" onClick={(e) => { e.preventDefault(); setSearchQuery(''); }}>
+          <a href="#" className="brand-logo" onClick={(e) => { e.preventDefault(); handleClearSearch(); }}>
             <Building2 size={26} color="var(--primary)" />
             <span>notoLX</span>
             <span className="brand-badge">@thapar.edu</span>
@@ -73,19 +90,26 @@ export const Navbar = () => {
         </div>
 
         {/* Global Search Bar */}
-        <div className="search-container" style={{ position: 'relative' }}>
+        <div className="search-container">
           <Search size={18} className="search-icon" />
           <input
             type="text"
             className="search-input"
             placeholder="Smart Search: Casio, cycle, bike, DSA books, fridge..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={localSearch}
+            onChange={handleSearchChange}
+            autoComplete="off"
+            spellCheck="false"
+            style={{
+              color: 'var(--text-main)',
+              caretColor: 'var(--primary)',
+              WebkitTextFillColor: 'var(--text-main)'
+            }}
           />
-          {searchQuery && (
+          {localSearch && (
             <button
               type="button"
-              onClick={() => setSearchQuery('')}
+              onClick={handleClearSearch}
               style={{
                 position: 'absolute',
                 right: '12px',

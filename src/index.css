@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap');
 
 :root, [data-theme='light'] {
+  color-scheme: light;
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Space Grotesk', sans-serif;
 
@@ -47,6 +48,7 @@
 }
 
 [data-theme='dark'] {
+  color-scheme: dark;
   /* Gothic Noir Palette - Dark Theme */
   --noir-black: #000000;
   --noir-silver: #D1D0D0;
@@ -88,6 +90,11 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+  color: inherit;
 }
 
 body {
@@ -180,18 +187,25 @@ body {
 /* Search Bar */
 .search-container {
   flex: 1;
+  min-width: 220px;
   max-width: 480px;
   position: relative;
 }
 
 .search-input {
   width: 100%;
-  padding: 0.6rem 1rem 0.6rem 2.6rem;
+  height: 42px;
+  line-height: normal;
+  padding: 0.6rem 2.5rem 0.6rem 2.6rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-color);
   background-color: var(--bg-input);
-  color: var(--text-main);
-  font-size: 0.9rem;
+  color: var(--text-main) !important;
+  -webkit-text-fill-color: var(--text-main) !important;
+  caret-color: var(--primary) !important;
+  font-family: var(--font-main);
+  font-size: 0.92rem;
+  font-weight: 500;
   outline: none;
   transition: all 0.2s ease;
 }
@@ -200,6 +214,14 @@ body {
   border-color: var(--noir-taupe);
   box-shadow: 0 0 0 3px var(--primary-ring);
   background-color: var(--bg-card);
+  color: var(--text-main) !important;
+  -webkit-text-fill-color: var(--text-main) !important;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+  -webkit-text-fill-color: var(--text-muted);
+  opacity: 0.75;
 }
 
 .search-icon {
@@ -621,6 +643,13 @@ body {
 }
 
 /* Responsive Breakpoints */
+@media (max-width: 1100px) {
+  .navbar-inner {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}
+
 @media (max-width: 768px) {
   .navbar-inner {
     flex-wrap: wrap;
