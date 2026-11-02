@@ -195,8 +195,8 @@ export const AppProvider = ({ children }) => {
   // Dynamic API Base URL for Cross-Device / Cross-Network Server connections
   const getApiBaseUrl = () => {
     if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      return window.location.origin;
+    if (typeof window !== 'undefined') {
+      return '';
     }
     return 'http://localhost:5000';
   };
@@ -662,21 +662,40 @@ export const AppProvider = ({ children }) => {
 
     // Check active campus requests and send email notifications if item matches
     try {
-      const activeRequests = itemRequests.filter(req => req.status === 'active' && req.requester_id !== sellerId);
-      const newTitle = newListing.title.toLowerCase();
+      const activeRequests = itemRequests.filter(req => req.status === 'active');
+      const newTitle = (newListing.title || '').toLowerCase();
+      const newDesc = (newListing.description || '').toLowerCase();
 
       const matchedRequests = activeRequests.filter(req => {
-        const reqName = req.item_name.toLowerCase();
-        const score = calculateListingRelevanceScore(newListing, req.item_name);
-        const words = reqName.split(/\s+/).filter(w => w.length > 2);
-        const wordMatch = words.some(w => newTitle.includes(w));
-        return score > 20 || wordMatch;
+        const reqName = (req.item_name || '').toLowerCase().trim();
+        if (!reqName) return false;
+
+        // 1. Exact or partial substring match in title or description
+        if (newTitle.includes(reqName) || reqName.includes(newTitle)) return true;
+        if (newDesc && newDesc.includes(reqName)) return true;
+
+        // 2. Tokenized Smart Search Relevance score
+        const score = calculateListingRelevanceScore(newListing, reqName);
+        if (score >= 20) return true;
+
+        // 3. Significant word intersection
+        const reqWords = reqName.split(/\s+/).filter(w => w.length >= 3);
+        const wordMatch = reqWords.some(w => newTitle.includes(w) || (newDesc && newDesc.includes(w)));
+        if (wordMatch) return true;
+
+        // 4. Category match
+        if (req.category && req.category !== 'all' && req.category === newListing.category) {
+          const partialWord = reqWords.some(w => newTitle.includes(w.slice(0, 3)));
+          if (partialWord) return true;
+        }
+
+        return false;
       });
 
       if (matchedRequests.length > 0) {
-        matchedRequests.forEach(async (matchedReq) => {
+        for (const matchedReq of matchedRequests) {
           try {
-            await fetch(`${getApiBaseUrl()}/api/notify-request-match`, {
+            const apiRes = await fetch(`${getApiBaseUrl()}/api/notify-request-match`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -692,11 +711,26 @@ export const AppProvider = ({ children }) => {
                 }
               })
             });
-            addToast(`📢 Matched student request! Notification email sent to ${matchedReq.requester_name} (${matchedReq.requester_email})`, 'success');
+
+            if (apiRes.ok) {
+              const resData = await apiRes.json();
+              if (resData.sentReal) {
+                addToast(`📧 Instant email sent to ${matchedReq.requester_email} for "${matchedReq.item_name}"!`, 'success');
+              } else if (resData.previewUrl) {
+                addToast(`📧 Match found! Notification generated for ${matchedReq.requester_name} (Logged preview URL)`, 'info');
+                console.log(`🔗 [Campus Request Match Preview]: ${resData.previewUrl}`);
+              } else {
+                addToast(`📢 Matched student request for "${matchedReq.item_name}"! Notification email sent to ${matchedReq.requester_email}`, 'success');
+              }
+            } else {
+              console.warn('Notification endpoint response status:', apiRes.status);
+              addToast(`📢 Matched campus request for "${matchedReq.item_name}" (${matchedReq.requester_email})!`, 'info');
+            }
           } catch (notifyErr) {
             console.warn('Notification email dispatch error:', notifyErr);
+            addToast(`📢 Matched student request for "${matchedReq.item_name}" (${matchedReq.requester_email})!`, 'info');
           }
-        });
+        }
       }
     } catch (matchErr) {
       console.warn('Error checking request matches:', matchErr);
