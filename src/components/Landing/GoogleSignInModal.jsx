@@ -30,7 +30,7 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
         className="modal-content" 
         style={{ 
           maxWidth: '460px', 
-          backgroundColor: '#141212', 
+          backgroundColor: 'var(--bg-card)', 
           border: '1px solid var(--border-color)',
           borderRadius: 'var(--radius-lg)' 
         }} 

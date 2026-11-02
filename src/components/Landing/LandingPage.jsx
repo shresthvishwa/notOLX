@@ -4,13 +4,11 @@ import { GoogleSignInModal } from './GoogleSignInModal';
 import { 
   Building2, 
   Lock, 
-  ArrowRight,
-  Sun,
-  Moon
+  ArrowRight
 } from 'lucide-react';
 
 export const LandingPage = ({ onExploreMarketplace }) => {
-  const { theme, toggleTheme, addToast } = useApp();
+  const { addToast } = useApp();
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('Home');
 
@@ -121,31 +119,8 @@ export const LandingPage = ({ onExploreMarketplace }) => {
           })}
         </nav>
 
-        {/* Right: Theme Toggle & Google Sign-In Button */}
+        {/* Right: Google Sign-In Button */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          {/* Light / Dark Mode Toggle */}
-          <button
-            onClick={toggleTheme}
-            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
-            style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '10px',
-              border: '1px solid rgba(34, 22, 22, 0.22)',
-              backgroundColor: 'rgba(255, 255, 255, 0.35)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: '#221616',
-              transition: 'background-color 0.2s ease'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.7)'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.35)'}
-          >
-            {theme === 'dark' ? <Sun size={17} color="#f59e0b" /> : <Moon size={17} color="#221616" />}
-          </button>
-
           {/* Continue with Google button */}
           <button
             onClick={() => setIsGoogleModalOpen(true)}

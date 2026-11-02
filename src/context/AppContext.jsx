@@ -96,22 +96,12 @@ export const AppProvider = ({ children }) => {
     }
   });
 
-  // Theme State (Light Mode Default vs Dark Gothic Noir)
-  const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('notolx_theme');
-    return saved || 'light';
-  });
-
-  const toggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(nextTheme);
-    localStorage.setItem('notolx_theme', nextTheme);
-    document.documentElement.setAttribute('data-theme', nextTheme);
-  };
+  // Unified Campus Theme (Vintage Parchment & Maroon)
+  const [theme] = useState('vintage');
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+    document.documentElement.setAttribute('data-theme', 'vintage');
+  }, []);
 
   // Filter & Search State
   const [searchQuery, setSearchQuery] = useState('');
@@ -1279,7 +1269,6 @@ export const AppProvider = ({ children }) => {
         toasts,
         addToast,
         theme,
-        toggleTheme,
 
         // Supabase Status
         isSupabaseConfigured

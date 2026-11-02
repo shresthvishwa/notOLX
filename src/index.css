@@ -1,89 +1,51 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&family=Permanent+Marker&family=Caveat:wght@700&display=swap');
 
-:root, [data-theme='light'] {
+:root, [data-theme='light'], [data-theme='dark'], [data-theme='vintage'] {
   color-scheme: light;
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Space Grotesk', sans-serif;
 
-  /* Gothic Noir Light Mode Palette - Default Light Theme */
-  --noir-black: #ffffff;
-  --noir-silver: #110e0e;
-  --noir-taupe: #4d4040;
-  --noir-charcoal: #e5e1e1;
+  /* Vintage Parchment & Maroon Campus Palette */
+  --noir-black: #1A1616;
+  --noir-silver: #F3E6DD;
+  --noir-taupe: #5E2424;
+  --noir-charcoal: #EAE0D5;
 
-  /* Semantic Variables - Light Mode */
-  --primary: #3d3232;
-  --primary-hover: #1c1616;
-  --primary-btn-bg: #1f1a1a;
+  /* Semantic Variables - Unified Vintage Theme */
+  --primary: #5E2424;
+  --primary-hover: #481B1B;
+  --primary-btn-bg: #1A1616;
   --primary-btn-text: #ffffff;
-  --primary-light: rgba(61, 50, 50, 0.08);
-  --primary-ring: rgba(61, 50, 50, 0.2);
+  --primary-light: rgba(94, 36, 36, 0.09);
+  --primary-ring: rgba(94, 36, 36, 0.22);
 
-  --accent: #3d3232;
-  --accent-dark: #d5d1d1;
+  --accent: #5E2424;
+  --accent-dark: #381515;
 
-  --bg-app: #f4f2f2;
-  --bg-card: #ffffff;
-  --bg-card-hover: #fcfbfb;
-  --bg-input: #e8e4e4;
-  --border-color: #c9c3c3;
-  --border-color-hover: #736464;
+  --bg-app: #F3E6DD;
+  --bg-card: #FAF4ED;
+  --bg-card-hover: #FFFDF9;
+  --bg-input: #EAE0D5;
+  --border-color: #D8CCC0;
+  --border-color-hover: #5E2424;
 
-  --text-main: #0f0d0d;
-  --text-muted: #4a3e3e;
-  --text-light: #6e5f5f;
+  --text-main: #221616;
+  --text-muted: #5C4A4A;
+  --text-light: #7E6C6C;
 
-  --hero-bg: linear-gradient(135deg, #2b2323 0%, #3d3232 50%, #5C4E4E 100%);
+  /* Marketplace Hero Banner - Rich Maroon Brush Palette */
+  --hero-bg: linear-gradient(135deg, #381515 0%, #4D1D1D 50%, #5E2424 100%);
   --hero-text: #ffffff;
-  --hero-muted: #e3dede;
+  --hero-muted: #EBE0D5;
 
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12);
+  --shadow-sm: 0 2px 5px rgba(34, 22, 22, 0.05);
+  --shadow-md: 0 4px 14px rgba(34, 22, 22, 0.08);
+  --shadow-lg: 0 12px 28px rgba(34, 22, 22, 0.12);
 
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-full: 9999px;
-}
-
-[data-theme='dark'] {
-  color-scheme: dark;
-  /* Gothic Noir Palette - Dark Theme */
-  --noir-black: #000000;
-  --noir-silver: #D1D0D0;
-  --noir-taupe: #988686;
-  --noir-charcoal: #5C4E4E;
-
-  /* Semantic Variables - Dark Mode */
-  --primary: #988686;
-  --primary-hover: #D1D0D0;
-  --primary-btn-bg: #D1D0D0;
-  --primary-btn-text: #000000;
-  --primary-light: rgba(152, 134, 134, 0.22);
-  --primary-ring: rgba(209, 208, 208, 0.3);
-  
-  --accent: #D1D0D0;
-  --accent-dark: #5C4E4E;
-
-  --bg-app: #080707;
-  --bg-card: #141212;
-  --bg-card-hover: #1e1a1a;
-  --bg-input: #242020;
-  --border-color: #383030;
-  --border-color-hover: #5C4E4E;
-  
-  --text-main: #f3f3f3;
-  --text-muted: #a39595;
-  --text-light: #7b6d6d;
-
-  --hero-bg: linear-gradient(135deg, #141212 0%, #242020 50%, #5C4E4E 100%);
-  --hero-text: #ffffff;
-  --hero-muted: rgba(255, 255, 255, 0.85);
-
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.8), 0 0 1px rgba(209, 208, 208, 0.2);
 }
 
 * {
@@ -285,19 +247,13 @@ body {
 }
 
 .btn-danger {
-  background-color: #7f1d1d;
+  background-color: #8B2525;
   color: #ffffff;
-  border: 1px solid #991b1b;
-}
-
-[data-theme='light'] .btn-danger {
-  background-color: #dc2626;
-  color: #ffffff;
-  border-color: #b91c1c;
+  border: 1px solid #731F1F;
 }
 
 .btn-danger:hover {
-  background-color: #991b1b;
+  background-color: #731F1F;
   color: #ffffff;
 }
 

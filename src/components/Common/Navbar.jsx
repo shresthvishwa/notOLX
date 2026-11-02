@@ -7,8 +7,6 @@ import {
   MessageSquare, 
   User, 
   ChevronDown, 
-  Moon, 
-  Sun,
   ShieldCheck,
   Sparkles,
   LogOut,
@@ -30,8 +28,6 @@ export const Navbar = () => {
     setIsProfileOpen,
     setActiveChat,
     conversations,
-    theme,
-    toggleTheme,
     handleLogout,
     itemRequests,
     setIsCampusRequestsBoardOpen
@@ -445,16 +441,6 @@ export const Navbar = () => {
               <LogIn size={15} /> Sign In (@thapar.edu)
             </button>
           )}
-
-          {/* Light/Dark Mode Toggle */}
-          <button 
-            className="btn btn-secondary btn-sm"
-            onClick={toggleTheme}
-            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
-            style={{ padding: '0.5rem' }}
-          >
-            {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="var(--text-main)" />}
-          </button>
         </div>
       </div>
     </nav>
