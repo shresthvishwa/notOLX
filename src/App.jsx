@@ -115,7 +115,7 @@ const MarketplaceView = ({ onBackToLanding }) => {
             marginTop: '1rem'
           }}>
             <SearchX size={48} color="var(--text-muted)" style={{ margin: '0 auto 1rem auto' }} />
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.4rem', color: 'var(--noir-silver)' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.4rem', color: 'var(--text-main)' }}>
               No campus listings found
             </h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
@@ -155,39 +155,100 @@ const MarketplaceView = ({ onBackToLanding }) => {
         {/* How it Works / Trust Pillars */}
         <div style={{
           marginTop: '3.5rem',
-          padding: '2rem 1.5rem',
+          padding: '2rem 1.75rem',
           backgroundColor: 'var(--bg-card)',
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--border-color)',
+          boxShadow: 'var(--shadow-sm)',
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '1.5rem'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '1.75rem'
         }}>
-          <div style={{ display: 'flex', gap: '0.85rem' }}>
-            <ShieldCheck size={28} color="var(--noir-silver)" style={{ flexShrink: 0 }} />
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            <div style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
+              backgroundColor: 'rgba(94, 36, 36, 0.08)',
+              border: '1px solid rgba(94, 36, 36, 0.16)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <ShieldCheck size={24} color="#5E2424" />
+            </div>
             <div>
-              <h4 style={{ fontWeight: 800, fontSize: '0.98rem', marginBottom: '0.2rem', color: 'var(--noir-silver)' }}>Google @thapar.edu Auth</h4>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+              <h4 style={{ 
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 800, 
+                fontSize: '1rem', 
+                marginBottom: '0.25rem', 
+                color: 'var(--text-main)' 
+              }}>
+                Google @thapar.edu Auth
+              </h4>
+              <p style={{ fontSize: '0.85rem', color: '#554242', lineHeight: 1.45, margin: 0 }}>
                 Only students with valid @thapar.edu Google accounts can buy and sell.
               </p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.85rem' }}>
-            <MessageSquare size={28} color="var(--noir-silver)" style={{ flexShrink: 0 }} />
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            <div style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
+              backgroundColor: 'rgba(94, 36, 36, 0.08)',
+              border: '1px solid rgba(94, 36, 36, 0.16)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <MessageSquare size={24} color="#5E2424" />
+            </div>
             <div>
-              <h4 style={{ fontWeight: 800, fontSize: '0.98rem', marginBottom: '0.2rem', color: 'var(--noir-silver)' }}>Safe 1-on-1 Campus Chat</h4>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+              <h4 style={{ 
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 800, 
+                fontSize: '1rem', 
+                marginBottom: '0.25rem', 
+                color: 'var(--text-main)' 
+              }}>
+                Safe 1-on-1 Campus Chat
+              </h4>
+              <p style={{ fontSize: '0.85rem', color: '#554242', lineHeight: 1.45, margin: 0 }}>
                 Propose counter-offers and arrange meetups at COS Canteen or Central Library.
               </p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.85rem' }}>
-            <Star size={28} color="var(--noir-silver)" style={{ flexShrink: 0 }} />
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            <div style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
+              backgroundColor: 'rgba(94, 36, 36, 0.08)',
+              border: '1px solid rgba(94, 36, 36, 0.16)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Star size={24} color="#5E2424" />
+            </div>
             <div>
-              <h4 style={{ fontWeight: 800, fontSize: '0.98rem', marginBottom: '0.2rem', color: 'var(--noir-silver)' }}>Student Ratings & Reviews</h4>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+              <h4 style={{ 
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 800, 
+                fontSize: '1rem', 
+                marginBottom: '0.25rem', 
+                color: 'var(--text-main)' 
+              }}>
+                Student Ratings & Reviews
+              </h4>
+              <p style={{ fontSize: '0.85rem', color: '#554242', lineHeight: 1.45, margin: 0 }}>
                 Rate traders after each transaction to build campus trust and reputation.
               </p>
             </div>
@@ -210,17 +271,17 @@ const MarketplaceView = ({ onBackToLanding }) => {
       <footer style={{
         borderTop: '1px solid var(--border-color)',
         backgroundColor: 'var(--bg-card)',
-        padding: '1.5rem 1rem',
+        padding: '2rem 1rem',
         textAlign: 'center',
-        fontSize: '0.82rem',
-        color: 'var(--text-muted)'
+        marginTop: '3.5rem'
       }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 800, color: 'var(--noir-silver)' }}>
-            <Building2 size={18} /> notoLX • Thapar University Marketplace
+        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '0.45rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '0.98rem', color: 'var(--text-main)' }}>
+            <Building2 size={19} color="#5E2424" />
+            <span><strong style={{ color: '#5E2424' }}>notoLX</strong> • Thapar University Marketplace</span>
           </div>
-          <div>
-            Built for TIET Students (@thapar.edu) • Gothic Noir Aesthetic
+          <div style={{ color: '#665252', fontSize: '0.84rem' }}>
+            Built for TIET Students (@thapar.edu) • Vintage Campus Marketplace
           </div>
         </div>
       </footer>

@@ -56,18 +56,18 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
         <div className="modal-body">
           
           <div style={{
-            padding: '0.75rem',
-            backgroundColor: 'var(--noir-charcoal)',
-            color: 'var(--noir-silver)',
+            padding: '0.8rem 1rem',
+            backgroundColor: 'rgba(94, 36, 36, 0.08)',
+            color: 'var(--text-main)',
             borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--noir-taupe)',
+            border: '1px solid rgba(94, 36, 36, 0.22)',
             marginBottom: '1.25rem',
-            fontSize: '0.8rem',
+            fontSize: '0.82rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem'
+            gap: '0.6rem'
           }}>
-            <ShieldCheck size={18} color="var(--noir-silver)" style={{ flexShrink: 0 }} />
+            <ShieldCheck size={18} color="var(--primary)" style={{ flexShrink: 0 }} />
             <span>Only <strong>@thapar.edu</strong> Google accounts are authorized for access.</span>
           </div>
 
@@ -98,7 +98,7 @@ export const GoogleSignInModal = ({ isOpen, onClose, onAuthenticated }) => {
               width: '100%',
               padding: '0.75rem',
               borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--noir-silver)',
+              border: '1px solid var(--border-color)',
               backgroundColor: '#ffffff',
               color: '#111827',
               fontWeight: 700,
