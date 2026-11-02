@@ -4,251 +4,414 @@ import { GoogleSignInModal } from './GoogleSignInModal';
 import { 
   Building2, 
   ShieldCheck, 
-  ArrowRight, 
-  Lock, 
-  Sparkles, 
   MessageSquare, 
-  Star, 
-  CheckCircle2, 
-  IndianRupee, 
-  MapPin,
-  ChevronRight,
+  MapPin, 
+  Lock, 
+  ArrowRight,
   Sun,
   Moon
 } from 'lucide-react';
-import { MOCK_LISTINGS } from '../../data/mockData';
 
 export const LandingPage = ({ onExploreMarketplace }) => {
   const { theme, toggleTheme } = useApp();
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('Home');
 
   return (
-    <div style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      
-      {/* Gothic Noir Navbar */}
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#F3E6DD',
+      backgroundImage: `url('/landing-bg-clean.jpg')`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center center',
+      backgroundRepeat: 'no-repeat',
+      color: '#221616',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      position: 'relative',
+      overflowX: 'hidden'
+    }}>
+
+      {/* Top Navigation Bar */}
       <header style={{
-        padding: '1.2rem 2rem',
-        borderBottom: '1px solid var(--border-color)',
-        backgroundColor: 'var(--bg-card)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 40,
-        backdropFilter: 'blur(10px)'
+        padding: '1.5rem 2.5rem',
+        width: '100%',
+        maxWidth: '1360px',
+        margin: '0 auto',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '1rem',
+        zIndex: 20
       }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <Building2 size={28} color="var(--text-main)" />
-            <span style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
+        
+        {/* Left: Brand Logo & Domain Badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', cursor: 'pointer' }} onClick={() => setActiveTab('Home')}>
+            <Building2 size={24} strokeWidth={2.2} color="#221616" />
+            <span style={{
+              fontFamily: "'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
+              fontSize: '1.45rem',
+              fontWeight: 800,
+              color: '#221616',
+              letterSpacing: '-0.02em'
+            }}>
               notoLX
             </span>
-            <span style={{ 
-              backgroundColor: 'var(--noir-charcoal)', 
-              color: 'var(--text-main)', 
-              fontSize: '0.7rem', 
-              fontWeight: 800, 
-              padding: '0.2rem 0.6rem', 
-              borderRadius: 'var(--radius-full)',
-              border: '1px solid var(--border-color)'
-            }}>
-              @thapar.edu
-            </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            {/* Light / Dark Mode Toggle */}
-            <button 
-              className="btn btn-secondary btn-sm"
-              onClick={toggleTheme}
-              title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
-              style={{ padding: '0.55rem' }}
-            >
-              {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="var(--text-main)" />}
-            </button>
-
-            <button 
-              className="btn btn-primary"
-              onClick={() => setIsGoogleModalOpen(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem' }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
-                <path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.39l3.99-3.15z"/>
-                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.61l3.99 3.15c.95-2.85 3.6-4.96 6.72-4.96z"/>
-              </svg>
-              <span>Sign In with Google</span>
-            </button>
-          </div>
+          <span style={{
+            border: '1px solid rgba(34, 22, 22, 0.2)',
+            backgroundColor: 'rgba(34, 22, 22, 0.05)',
+            color: '#342525',
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            padding: '0.22rem 0.68rem',
+            borderRadius: '9999px',
+            letterSpacing: '-0.01em'
+          }}>
+            @thapar.edu
+          </span>
         </div>
-      </header>
 
-      {/* Hero Section */}
-      <section style={{
-        padding: '5rem 1.5rem 4rem 1.5rem',
-        maxWidth: '1100px',
-        margin: '0 auto',
-        textAlign: 'center',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '1.5rem'
-      }}>
-        <div style={{
-          display: 'inline-flex',
+        {/* Center: Pill Navigation Menu */}
+        <nav style={{
+          display: 'flex',
           alignItems: 'center',
-          gap: '0.5rem',
-          padding: '0.4rem 1rem',
-          borderRadius: 'var(--radius-full)',
-          backgroundColor: 'var(--noir-charcoal)',
-          color: 'var(--noir-silver)',
-          border: '1px solid var(--border-color)',
-          fontSize: '0.82rem',
-          fontWeight: 700,
-          boxShadow: 'var(--shadow-sm)'
+          gap: '0.35rem'
         }}>
-          <ShieldCheck size={16} color="var(--noir-silver)" />
-          <span>THAPAR UNIVERSITY EXCLUSIVE</span>
-        </div>
+          {['Home', 'Browse', 'Sell', 'About'].map((tab) => {
+            const isActive = activeTab === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => {
+                  setActiveTab(tab);
+                  if (tab === 'Browse') {
+                    if (onExploreMarketplace) onExploreMarketplace();
+                  } else if (tab === 'Sell') {
+                    setIsGoogleModalOpen(true);
+                  } else if (tab === 'About') {
+                    const el = document.getElementById('pillars-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                style={{
+                  backgroundColor: isActive ? '#1A1616' : 'transparent',
+                  color: isActive ? '#ffffff' : '#221616',
+                  border: 'none',
+                  borderRadius: '9999px',
+                  padding: isActive ? '0.48rem 1.45rem' : '0.48rem 1.15rem',
+                  fontSize: '0.92rem',
+                  fontWeight: isActive ? 700 : 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.18s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) e.currentTarget.style.color = '#000000';
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) e.currentTarget.style.color = '#221616';
+                }}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </nav>
 
-        <h1 style={{
-          fontFamily: 'var(--font-heading)',
-          fontSize: '3.2rem',
-          fontWeight: 800,
-          lineHeight: 1.1,
-          letterSpacing: '-0.03em',
-          color: 'var(--text-main)',
-          maxWidth: '850px'
-        }}>
-          Campus Second-Hand Marketplace for <span style={{ color: 'var(--noir-taupe)', textDecoration: 'underline', textDecorationColor: 'var(--border-color)' }}>Thapar Students</span>
-        </h1>
-
-        <p style={{
-          fontSize: '1.15rem',
-          color: 'var(--text-muted)',
-          maxWidth: '680px',
-          lineHeight: 1.6
-        }}>
-          The Verified Student Marketplace for Thapar University. Buy and sell campus essentials—from textbooks to electronics—exclusively with verified <strong>@thapar.edu</strong> accounts.
-        </p>
-
-        {/* Primary CTA Button: Sign In with Google */}
-        <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-          <button 
-            className="btn btn-primary"
-            onClick={() => setIsGoogleModalOpen(true)}
+        {/* Right: Theme Toggle & Google Sign-In Button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          {/* Light / Dark Mode Toggle */}
+          <button
+            onClick={toggleTheme}
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
             style={{
-              padding: '0.9rem 2.2rem',
-              fontSize: '1.05rem',
-              borderRadius: 'var(--radius-md)',
+              width: '38px',
+              height: '38px',
+              borderRadius: '10px',
+              border: '1px solid rgba(34, 22, 22, 0.22)',
+              backgroundColor: 'rgba(255, 255, 255, 0.35)',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.75rem',
-              boxShadow: '0 8px 24px rgba(209, 208, 208, 0.25)'
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#221616',
+              transition: 'background-color 0.2s ease'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.7)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.35)'}
+          >
+            {theme === 'dark' ? <Sun size={17} color="#f59e0b" /> : <Moon size={17} color="#221616" />}
+          </button>
+
+          {/* Continue with Google button */}
+          <button
+            onClick={() => setIsGoogleModalOpen(true)}
+            style={{
+              backgroundColor: '#1A1616',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '9999px',
+              padding: '0.55rem 1.25rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.55rem',
+              fontSize: '0.88rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(26, 22, 22, 0.18)',
+              transition: 'all 0.18s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#2c2424';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#1A1616';
+              e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24">
+            <svg width="17" height="17" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
               <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
               <path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.39l3.99-3.15z"/>
               <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.61l3.99 3.15c.95-2.85 3.6-4.96 6.72-4.96z"/>
             </svg>
-            <span>Sign in with Google (@thapar.edu)</span>
-            <ArrowRight size={18} />
+            <span>Continue with Google</span>
           </button>
-
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-            <Lock size={12} /> Google SSO domain check automatically enforced
-          </span>
         </div>
+      </header>
 
-      </section>
-
-      {/* Feature Pillars Grid (Boxed) */}
-      <section style={{
-        padding: '2.5rem 1.5rem',
-        backgroundColor: 'var(--bg-card)',
-        borderTop: '1px solid var(--border-color)',
-        borderBottom: '1px solid var(--border-color)'
-      }}>
-        <div style={{ maxWidth: '950px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-          
-          <div style={{
-            padding: '1.25rem',
-            backgroundColor: 'var(--bg-input)',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-color)',
-            boxShadow: 'var(--shadow-sm)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem'
-          }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ShieldCheck size={18} color="var(--noir-silver)" />
-            </div>
-            <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>100% Verified TIET Students</h3>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.45, margin: 0 }}>
-              Strict Google OAuth email authentication. Only students holding an active `@thapar.edu` account can publish or purchase.
-            </p>
-          </div>
-
-          <div style={{
-            padding: '1.25rem',
-            backgroundColor: 'var(--bg-input)',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-color)',
-            boxShadow: 'var(--shadow-sm)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem'
-          }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MessageSquare size={18} color="var(--noir-silver)" />
-            </div>
-            <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>Real-Time Offer Negotiation</h3>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.45, margin: 0 }}>
-              Chat 1-on-1 directly with sellers. Propose custom price counter-offers and set safe campus meetup locations.
-            </p>
-          </div>
-
-          <div style={{
-            padding: '1.25rem',
-            backgroundColor: 'var(--bg-input)',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-color)',
-            boxShadow: 'var(--shadow-sm)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem'
-          }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--noir-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MapPin size={18} color="var(--noir-silver)" />
-            </div>
-            <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>Safe Campus Meetup Spots</h3>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.45, margin: 0 }}>
-              Trade conveniently at recognizable campus landmarks like COS Canteen, Nava Nalanda Library Plaza, and Hostel J.
-            </p>
-          </div>
-
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer style={{
-        marginTop: 'auto',
-        borderTop: '1px solid var(--border-color)',
-        backgroundColor: 'var(--noir-black)',
-        padding: '2rem 1rem',
+      {/* Main Hero Center Content */}
+      <main style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         textAlign: 'center',
-        fontSize: '0.82rem',
-        color: 'var(--noir-taupe)'
+        padding: '2.5rem 1.5rem',
+        maxWidth: '880px',
+        margin: '0 auto',
+        width: '100%',
+        zIndex: 10
       }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 800, color: 'var(--noir-silver)' }}>
-            <Building2 size={18} /> notoLX • Thapar University Marketplace
+
+        {/* Framed Title Block with Corner Brackets */}
+        <div style={{
+          position: 'relative',
+          display: 'inline-block',
+          width: '100%',
+          maxWidth: '740px',
+          padding: '0.5rem 1.5rem'
+        }}>
+          {/* Top-Left Corner Bracket ┌ */}
+          <div style={{
+            position: 'absolute',
+            top: '-18px',
+            left: '-12px',
+            width: '26px',
+            height: '26px',
+            borderTop: '2.5px solid #5C4848',
+            borderLeft: '2.5px solid #5C4848',
+            pointerEvents: 'none'
+          }} />
+
+          {/* Center Painted Brush Banner with white notoLX */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+            <img 
+              src="/notolx-brush-hero.png" 
+              alt="notoLX" 
+              style={{
+                width: '100%',
+                maxWidth: '420px',
+                height: 'auto',
+                display: 'block',
+                filter: 'drop-shadow(0 4px 10px rgba(95, 40, 37, 0.15))',
+                userSelect: 'none'
+              }} 
+            />
           </div>
-          <div>
-            Built exclusively for TIET Students (@thapar.edu) • Gothic Noir Aesthetic
+
+          {/* Main Headline: your campus, your marketplace. */}
+          <h1 style={{
+            fontFamily: "'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
+            fontSize: 'clamp(2.6rem, 6.2vw, 4.4rem)',
+            fontWeight: 800,
+            lineHeight: 1.08,
+            letterSpacing: '-0.035em',
+            color: '#261616',
+            margin: 0
+          }}>
+            your campus,<br />
+            your marketplace.
+          </h1>
+
+          {/* Bottom-Right Corner Bracket ┘ */}
+          <div style={{
+            position: 'absolute',
+            bottom: '-12px',
+            right: '-12px',
+            width: '26px',
+            height: '26px',
+            borderBottom: '2.5px solid #5C4848',
+            borderRight: '2.5px solid #5C4848',
+            pointerEvents: 'none'
+          }} />
+        </div>
+
+        {/* Subtitle */}
+        <p style={{
+          fontSize: 'clamp(1.05rem, 2.2vw, 1.28rem)',
+          fontWeight: 500,
+          color: '#554242',
+          marginTop: '1.35rem',
+          marginBottom: '2.2rem',
+          letterSpacing: '-0.01em',
+          maxWidth: '620px'
+        }}>
+          Buy, sell, and exchange with fellow Thapar students.
+        </p>
+
+        {/* Big Black CTA Button: Continue with Google (@thapar.edu) */}
+        <button
+          onClick={() => setIsGoogleModalOpen(true)}
+          style={{
+            backgroundColor: '#161313',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '9999px',
+            padding: '1rem 2.5rem',
+            fontSize: 'clamp(0.98rem, 2vw, 1.12rem)',
+            fontWeight: 700,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.85rem',
+            cursor: 'pointer',
+            boxShadow: '0 8px 24px rgba(22, 19, 19, 0.22)',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#2c2424';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 12px 30px rgba(22, 19, 19, 0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#161313';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 8px 24px rgba(22, 19, 19, 0.22)';
+          }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.39l3.99-3.15z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.61l3.99 3.15c.95-2.85 3.6-4.96 6.72-4.96z"/>
+          </svg>
+          <span>Continue with Google (@thapar.edu)</span>
+          <ArrowRight size={19} />
+        </button>
+
+        {/* Security Note */}
+        <div style={{
+          marginTop: '1.1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.45rem',
+          color: '#5C4A4A',
+          fontSize: '0.84rem',
+          fontWeight: 500
+        }}>
+          <Lock size={13} color="#5C4A4A" />
+          <span>Exclusively for verified <strong>@thapar.edu</strong> accounts.</span>
+        </div>
+      </main>
+
+      {/* Bottom Feature Pillars */}
+      <footer id="pillars-section" style={{
+        padding: '2.5rem 2rem',
+        width: '100%',
+        maxWidth: '1120px',
+        margin: '0 auto',
+        zIndex: 10
+      }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '2.5rem',
+          alignItems: 'center'
+        }}>
+          
+          {/* Pillar 1: Verified Community */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.95rem' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <ShieldCheck size={32} strokeWidth={2.2} color="#1E1414" />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.02rem', fontWeight: 800, color: '#1E1414', margin: 0, letterSpacing: '-0.015em' }}>
+                Verified Community
+              </h3>
+              <p style={{ fontSize: '0.84rem', color: '#5C4A4A', margin: '0.22rem 0 0 0', fontWeight: 500 }}>
+                Only Thapar. Always verified.
+              </p>
+            </div>
           </div>
+
+          {/* Pillar 2: Direct Negotiation */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.95rem' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <MessageSquare size={32} strokeWidth={2.2} color="#1E1414" />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.02rem', fontWeight: 800, color: '#1E1414', margin: 0, letterSpacing: '-0.015em' }}>
+                Direct Negotiation
+              </h3>
+              <p style={{ fontSize: '0.84rem', color: '#5C4A4A', margin: '0.22rem 0 0 0', fontWeight: 500 }}>
+                Talk. Negotiate. Deal.
+              </p>
+            </div>
+          </div>
+
+          {/* Pillar 3: Safe Exchanges */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.95rem' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <MapPin size={32} strokeWidth={2.2} color="#1E1414" />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.02rem', fontWeight: 800, color: '#1E1414', margin: 0, letterSpacing: '-0.015em' }}>
+                Safe Exchanges
+              </h3>
+              <p style={{ fontSize: '0.84rem', color: '#5C4A4A', margin: '0.22rem 0 0 0', fontWeight: 500 }}>
+                Meet within campus.
+              </p>
+            </div>
+          </div>
+
         </div>
       </footer>
 
