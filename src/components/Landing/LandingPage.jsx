@@ -3,9 +3,6 @@ import { useApp } from '../../context/AppContext';
 import { GoogleSignInModal } from './GoogleSignInModal';
 import { 
   Building2, 
-  ShieldCheck, 
-  MessageSquare, 
-  MapPin, 
   Lock, 
   ArrowRight,
   Sun,
@@ -13,7 +10,7 @@ import {
 } from 'lucide-react';
 
 export const LandingPage = ({ onExploreMarketplace }) => {
-  const { theme, toggleTheme } = useApp();
+  const { theme, toggleTheme, addToast } = useApp();
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('Home');
 
@@ -49,7 +46,10 @@ export const LandingPage = ({ onExploreMarketplace }) => {
         
         {/* Left: Brand Logo & Domain Badge */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', cursor: 'pointer' }} onClick={() => setActiveTab('Home')}>
+          <div 
+            style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', cursor: 'pointer' }} 
+            onClick={() => setActiveTab('Home')}
+          >
             <Building2 size={24} strokeWidth={2.2} color="#221616" />
             <span style={{
               fontFamily: "'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
@@ -94,8 +94,7 @@ export const LandingPage = ({ onExploreMarketplace }) => {
                   } else if (tab === 'Sell') {
                     setIsGoogleModalOpen(true);
                   } else if (tab === 'About') {
-                    const el = document.getElementById('pillars-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    addToast('notoLX: The verified peer-to-peer marketplace exclusively for Thapar University students (@thapar.edu)', 'info');
                   }
                 }}
                 style={{
@@ -193,7 +192,7 @@ export const LandingPage = ({ onExploreMarketplace }) => {
         alignItems: 'center',
         justifyContent: 'center',
         textAlign: 'center',
-        padding: '2.5rem 1.5rem',
+        padding: '3rem 1.5rem',
         maxWidth: '880px',
         margin: '0 auto',
         width: '100%',
@@ -220,20 +219,72 @@ export const LandingPage = ({ onExploreMarketplace }) => {
             pointerEvents: 'none'
           }} />
 
-          {/* Center Painted Brush Banner with white notoLX */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
-            <img 
-              src="/notolx-brush-hero.png" 
-              alt="notoLX" 
+          {/* Center Painted Brush Banner with Restyled notoLX */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            padding: '0.85rem 3rem',
+            marginBottom: '1.4rem',
+            userSelect: 'none'
+          }}>
+            {/* Vector Textured Dry Brush Swatch */}
+            <svg 
+              viewBox="0 0 360 86" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
               style={{
+                position: 'absolute',
+                top: 0,
+                left: '50%',
+                transform: 'translateX(-50%)',
                 width: '100%',
-                maxWidth: '420px',
-                height: 'auto',
-                display: 'block',
-                filter: 'drop-shadow(0 4px 10px rgba(95, 40, 37, 0.15))',
-                userSelect: 'none'
-              }} 
-            />
+                maxWidth: '400px',
+                height: '100%',
+                filter: 'drop-shadow(0 4px 12px rgba(95, 36, 36, 0.22))',
+                zIndex: 0,
+                pointerEvents: 'none'
+              }}
+            >
+              {/* Main Paint Body */}
+              <path 
+                d="M12 42C24 22 58 14 110 12C172 10 242 12 300 16C332 18 352 26 348 43C344 60 322 72 278 74C212 77 140 76 72 73C38 71 8 62 12 42Z" 
+                fill="#5E2424"
+              />
+              {/* Upper Textured Bristle Sweep */}
+              <path 
+                d="M32 18C68 12 122 10 182 8C242 6 302 10 332 16C336 17 326 22 312 20C252 14 182 13 122 15C78 17 42 22 32 18Z" 
+                fill="#501E1E" 
+                opacity="0.88"
+              />
+              {/* Lower Dry Paint Texture */}
+              <path 
+                d="M24 66C66 73 138 76 212 77C278 78 328 74 342 69C346 70 332 77 302 79C226 82 146 81 66 77C30 75 18 69 24 66Z" 
+                fill="#461A1A" 
+                opacity="0.92"
+              />
+              {/* Side Paint Flecks */}
+              <circle cx="6" cy="42" r="3.5" fill="#5E2424" opacity="0.65" />
+              <circle cx="354" cy="40" r="3.5" fill="#5E2424" opacity="0.65" />
+            </svg>
+
+            {/* Stylized notoLX text */}
+            <span style={{
+              position: 'relative',
+              zIndex: 1,
+              fontFamily: "'Permanent Marker', cursive",
+              fontSize: 'clamp(2.3rem, 5vw, 3rem)',
+              fontWeight: 400,
+              color: '#ffffff',
+              letterSpacing: '0.07em',
+              transform: 'rotate(-1.8deg)',
+              display: 'inline-block',
+              textShadow: '0 2px 6px rgba(0, 0, 0, 0.35)',
+              lineHeight: 1
+            }}>
+              notoLX
+            </span>
           </div>
 
           {/* Main Headline: your campus, your marketplace. */}
@@ -331,89 +382,8 @@ export const LandingPage = ({ onExploreMarketplace }) => {
         </div>
       </main>
 
-      {/* Bottom Feature Pillars */}
-      <footer id="pillars-section" style={{
-        padding: '2.5rem 2rem',
-        width: '100%',
-        maxWidth: '1120px',
-        margin: '0 auto',
-        zIndex: 10
-      }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          gap: '2.5rem',
-          alignItems: 'center'
-        }}>
-          
-          {/* Pillar 1: Verified Community */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.95rem' }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}>
-              <ShieldCheck size={32} strokeWidth={2.2} color="#1E1414" />
-            </div>
-            <div>
-              <h3 style={{ fontSize: '1.02rem', fontWeight: 800, color: '#1E1414', margin: 0, letterSpacing: '-0.015em' }}>
-                Verified Community
-              </h3>
-              <p style={{ fontSize: '0.84rem', color: '#5C4A4A', margin: '0.22rem 0 0 0', fontWeight: 500 }}>
-                Only Thapar. Always verified.
-              </p>
-            </div>
-          </div>
-
-          {/* Pillar 2: Direct Negotiation */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.95rem' }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}>
-              <MessageSquare size={32} strokeWidth={2.2} color="#1E1414" />
-            </div>
-            <div>
-              <h3 style={{ fontSize: '1.02rem', fontWeight: 800, color: '#1E1414', margin: 0, letterSpacing: '-0.015em' }}>
-                Direct Negotiation
-              </h3>
-              <p style={{ fontSize: '0.84rem', color: '#5C4A4A', margin: '0.22rem 0 0 0', fontWeight: 500 }}>
-                Talk. Negotiate. Deal.
-              </p>
-            </div>
-          </div>
-
-          {/* Pillar 3: Safe Exchanges */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.95rem' }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}>
-              <MapPin size={32} strokeWidth={2.2} color="#1E1414" />
-            </div>
-            <div>
-              <h3 style={{ fontSize: '1.02rem', fontWeight: 800, color: '#1E1414', margin: 0, letterSpacing: '-0.015em' }}>
-                Safe Exchanges
-              </h3>
-              <p style={{ fontSize: '0.84rem', color: '#5C4A4A', margin: '0.22rem 0 0 0', fontWeight: 500 }}>
-                Meet within campus.
-              </p>
-            </div>
-          </div>
-
-        </div>
-      </footer>
+      {/* Subtle bottom spacing padding */}
+      <div style={{ height: '3rem' }} />
 
       {/* Google Auth Modal */}
       <GoogleSignInModal 
