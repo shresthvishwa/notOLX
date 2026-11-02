@@ -194,72 +194,25 @@ export const LandingPage = ({ onExploreMarketplace }) => {
             pointerEvents: 'none'
           }} />
 
-          {/* Center Painted Brush Banner with Restyled notoLX */}
+          {/* Distressed Stamped notoLX Logo */}
           <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
+            display: 'flex',
             justifyContent: 'center',
-            position: 'relative',
-            padding: '0.85rem 3rem',
-            marginBottom: '1.4rem',
+            alignItems: 'center',
+            marginBottom: '0.85rem',
             userSelect: 'none'
           }}>
-            {/* Vector Textured Dry Brush Swatch */}
-            <svg 
-              viewBox="0 0 360 86" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
+            <img 
+              src="/notolx-distressed-logo.png" 
+              alt="notoLX" 
               style={{
-                position: 'absolute',
-                top: 0,
-                left: '50%',
-                transform: 'translateX(-50%)',
                 width: '100%',
-                maxWidth: '400px',
-                height: '100%',
-                filter: 'drop-shadow(0 4px 12px rgba(95, 36, 36, 0.22))',
-                zIndex: 0,
-                pointerEvents: 'none'
-              }}
-            >
-              {/* Main Paint Body */}
-              <path 
-                d="M12 42C24 22 58 14 110 12C172 10 242 12 300 16C332 18 352 26 348 43C344 60 322 72 278 74C212 77 140 76 72 73C38 71 8 62 12 42Z" 
-                fill="#5E2424"
-              />
-              {/* Upper Textured Bristle Sweep */}
-              <path 
-                d="M32 18C68 12 122 10 182 8C242 6 302 10 332 16C336 17 326 22 312 20C252 14 182 13 122 15C78 17 42 22 32 18Z" 
-                fill="#501E1E" 
-                opacity="0.88"
-              />
-              {/* Lower Dry Paint Texture */}
-              <path 
-                d="M24 66C66 73 138 76 212 77C278 78 328 74 342 69C346 70 332 77 302 79C226 82 146 81 66 77C30 75 18 69 24 66Z" 
-                fill="#461A1A" 
-                opacity="0.92"
-              />
-              {/* Side Paint Flecks */}
-              <circle cx="6" cy="42" r="3.5" fill="#5E2424" opacity="0.65" />
-              <circle cx="354" cy="40" r="3.5" fill="#5E2424" opacity="0.65" />
-            </svg>
-
-            {/* Stylized notoLX text */}
-            <span style={{
-              position: 'relative',
-              zIndex: 1,
-              fontFamily: "'Permanent Marker', cursive",
-              fontSize: 'clamp(2.3rem, 5vw, 3rem)',
-              fontWeight: 400,
-              color: '#ffffff',
-              letterSpacing: '0.07em',
-              transform: 'rotate(-1.8deg)',
-              display: 'inline-block',
-              textShadow: '0 2px 6px rgba(0, 0, 0, 0.35)',
-              lineHeight: 1
-            }}>
-              notoLX
-            </span>
+                maxWidth: '425px',
+                height: 'auto',
+                display: 'block',
+                filter: 'drop-shadow(0 2px 8px rgba(92, 37, 34, 0.12))'
+              }} 
+            />
           </div>
 
           {/* Main Headline: your campus, your marketplace. */}
