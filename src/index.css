@@ -23,8 +23,8 @@
   --accent-dark: #381515;
 
   --bg-app: #F3E6DD;
-  --bg-card: #FAF4ED;
-  --bg-card-hover: #FFFDF9;
+  --bg-card: #EFE4D6;
+  --bg-card-hover: #F7EFE4;
   --bg-input: #EAE0D5;
   --border-color: #D8CCC0;
   --border-color-hover: #5E2424;
@@ -111,7 +111,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 40;
-  background-color: var(--bg-card);
+  background-color: rgba(239, 228, 214, 0.90);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
   padding: 0.75rem 1.5rem;
