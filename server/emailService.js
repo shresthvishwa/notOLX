@@ -106,6 +106,99 @@ export const verifyEmailService = async () => {
   }
 };
 
+export const sendRequestConfirmationEmail = async ({ requester_email, requester_name, item_name, max_budget, campus_location, originUrl }) => {
+  if (!requester_email || !item_name) {
+    throw new Error('Missing required parameters for request confirmation email.');
+  }
+
+  const subject = `📋 [notoLX] Campus Request Confirmed: "${item_name}"`;
+  const textContent = `Hi ${requester_name || 'Student'},\n\nYour campus item request for "${item_name}" is now live on notoLX!\n\nDetails:\n- Item: ${item_name}\n- Max Budget: ${max_budget ? `₹${max_budget}` : 'Flexible'}\n- Pickup Location: ${campus_location || 'Campus'}\n\nOur system is actively scanning all newly listed items. As soon as another student lists a matching item, you will instantly receive an email alert with a direct chat link.\n\nBest regards,\nnotoLX Team @ Thapar Institute`;
+
+  const htmlContent = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 580px; margin: 0 auto; padding: 24px 16px; background-color: #F3E6DD;">
+      <div style="background-color: #FFFFFF; border-radius: 14px; overflow: hidden; border: 1px solid #D8CCC0; box-shadow: 0 4px 18px rgba(34, 22, 22, 0.08);">
+        
+        <!-- Header -->
+        <div style="background-color: #5E2424; padding: 24px; text-align: center;">
+          <h1 style="color: #FFFFFF; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">🎒 notoLX</h1>
+          <p style="color: #EBDDCE; font-size: 13px; margin: 6px 0 0 0; font-weight: 500;">Thapar Institute of Engineering & Technology • @thapar.edu</p>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 28px 24px;">
+          <h2 style="color: #221616; margin-top: 0; font-size: 18px; font-weight: 700;">Request Posted Successfully! 📋</h2>
+          <p style="color: #5C4A4A; font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;">
+            Hi <strong style="color: #221616;">${requester_name || 'Student'}</strong>, your request has been published to the <strong>Campus Wanted Board</strong>:
+          </p>
+
+          <!-- Request Summary Card -->
+          <div style="background-color: #FAF4ED; border: 1px solid #D8CCC0; border-radius: 10px; padding: 18px; margin: 20px 0;">
+            <div style="font-size: 17px; font-weight: 800; color: #221616;">${item_name}</div>
+            <div style="font-size: 16px; font-weight: 700; color: #5E2424; margin-top: 6px;">Budget: ${max_budget ? `Up to ₹${max_budget}` : 'Flexible'}</div>
+            <div style="font-size: 13px; color: #5C4A4A; margin-top: 8px;">📍 Pickup Preferred: <strong style="color: #221616;">${campus_location || 'Campus'}</strong></div>
+            <div style="font-size: 13px; color: #059669; font-weight: 700; margin-top: 6px;">● Status: Active & Monitoring</div>
+          </div>
+
+          <div style="background-color: rgba(94, 36, 36, 0.06); border-left: 4px solid #5E2424; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+            <p style="color: #481B1B; font-size: 13.5px; line-height: 1.5; margin: 0;">
+              <strong>🔔 Automated Alert Active:</strong> The moment any student posts a matching item, our system will dispatch an instant notification to this inbox with seller contact details.
+            </p>
+          </div>
+
+          <div style="text-align: center; margin: 24px 0 8px 0;">
+            <a href="${originUrl || 'https://notolx.thapar.edu'}" style="background-color: #5E2424; color: #FFFFFF; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 14px; display: inline-block; letter-spacing: 0.2px;">
+              Open notoLX Campus Board →
+            </a>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #FAF4ED; border-top: 1px solid #D8CCC0; padding: 16px 20px; text-align: center; font-size: 12px; color: #7E6C6C;">
+          Sent to <strong style="color: #221616;">${requester_email}</strong> • notoLX Peer-to-Peer Campus Marketplace
+        </div>
+      </div>
+    </div>
+  `;
+
+  const { transporter, isReal } = await getMailTransporter();
+  let previewUrl = null;
+
+  if (transporter) {
+    const senderEmail = process.env.SMTP_USER || process.env.GMAIL_USER || 'noreply.notolx@gmail.com';
+    const fromAddress = `"notoLX Campus Marketplace" <${senderEmail}>`;
+
+    const info = await transporter.sendMail({
+      from: fromAddress,
+      to: requester_email,
+      subject,
+      text: textContent,
+      html: htmlContent
+    });
+
+    if (!isReal) {
+      previewUrl = nodemailer.getTestMessageUrl(info);
+    }
+
+    console.log(`📧 [REQUEST CONFIRMATION ${isReal ? 'DELIVERED TO INBOX' : 'TEST PREVIEW'}] To: ${requester_email} | Subject: ${subject}`);
+
+    return {
+      success: true,
+      sentReal: isReal,
+      recipient: requester_email,
+      previewUrl,
+      subject
+    };
+  } else {
+    return {
+      success: true,
+      sentReal: false,
+      recipient: requester_email,
+      previewUrl: null,
+      subject
+    };
+  }
+};
+
 export const sendRequestMatchEmail = async ({ requester_email, requester_name, item_name, listing, originUrl }) => {
   if (!requester_email || !listing || !listing.title) {
     throw new Error('Missing required parameters for email notification.');

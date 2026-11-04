@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import nodemailer from 'nodemailer';
-import { sendRequestMatchEmail, verifyEmailService } from './emailService.js';
+import { sendRequestMatchEmail, sendRequestConfirmationEmail, verifyEmailService } from './emailService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -340,8 +340,33 @@ app.delete('/api/item-requests/:id', (req, res) => {
 });
 
 // ==========================================
-// 7. Automated Email Notification for Request Matches
+// 7. Automated Email Notification for Request Matches & Confirmations
 // ==========================================
+app.post('/api/notify-request-created', async (req, res) => {
+  const { requester_email, requester_name, item_name, max_budget, campus_location } = req.body;
+
+  if (!requester_email || !item_name) {
+    return res.status(400).json({ error: 'Missing required parameters (requester_email, item_name).' });
+  }
+
+  try {
+    const originUrl = req.headers.origin || 'http://localhost:5173';
+    const result = await sendRequestConfirmationEmail({
+      requester_email,
+      requester_name,
+      item_name,
+      max_budget,
+      campus_location,
+      originUrl
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('Error dispatching request confirmation email:', err);
+    res.status(500).json({ error: 'Failed to send confirmation email', details: err.message });
+  }
+});
+
 app.post('/api/notify-request-match', async (req, res) => {
   const { requester_email, requester_name, item_name, listing } = req.body;
 

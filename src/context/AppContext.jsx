@@ -778,6 +778,67 @@ export const AppProvider = ({ children }) => {
       console.warn('Express item-request post error:', err);
     }
 
+    // Dispatch Request Confirmation Email to Student's real inbox
+    try {
+      const confirmRes = await fetch(`${getApiBaseUrl()}/api/notify-request-created`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requester_email: newRequest.requester_email,
+          requester_name: newRequest.requester_name,
+          item_name: newRequest.item_name,
+          max_budget: newRequest.max_budget,
+          campus_location: newRequest.campus_location
+        })
+      });
+      if (confirmRes.ok) {
+        const confirmData = await confirmRes.json();
+        if (confirmData.sentReal) {
+          addToast(`📧 Confirmation email delivered to ${newRequest.requester_email}!`, 'success');
+        }
+      }
+    } catch (emailErr) {
+      console.warn('Request confirmation email error:', emailErr);
+    }
+
+    // Scan existing marketplace listings for immediate matches
+    try {
+      const reqName = newRequest.item_name.toLowerCase();
+      const existingMatch = listings.find(listing => {
+        if (listing.status === 'sold') return false;
+        const title = (listing.title || '').toLowerCase();
+        const desc = (listing.description || '').toLowerCase();
+        if (title.includes(reqName) || reqName.includes(title)) return true;
+        if (desc && desc.includes(reqName)) return true;
+        const score = calculateListingRelevanceScore(listing, reqName);
+        return score >= 20;
+      });
+
+      if (existingMatch) {
+        const matchRes = await fetch(`${getApiBaseUrl()}/api/notify-request-match`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            requester_email: newRequest.requester_email,
+            requester_name: newRequest.requester_name,
+            item_name: newRequest.item_name,
+            listing: {
+              id: existingMatch.id,
+              title: existingMatch.title,
+              price: existingMatch.price,
+              campus_location: existingMatch.campus_location,
+              condition: existingMatch.condition
+            }
+          })
+        });
+        if (matchRes.ok) {
+          addToast(`🎉 Instant match found on campus for "${existingMatch.title}"! Alert email sent.`, 'success');
+        }
+      }
+    } catch (matchErr) {
+      console.warn('Existing listing match error:', matchErr);
+    }
+
     return true;
   };
 
