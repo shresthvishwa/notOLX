@@ -1,4 +1,37 @@
 import nodemailer from 'nodemailer';
+import fs from 'fs';
+import path from 'path';
+
+// Automatically load .env if not already present in process.env
+const loadEnvFromDisk = () => {
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) return;
+  try {
+    if (typeof process.loadEnvFile === 'function') {
+      process.loadEnvFile();
+    }
+  } catch {}
+  try {
+    const envPath = path.resolve(process.cwd(), '.env');
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf8');
+      content.split(/\r?\n/).forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith('#')) {
+          const eqIdx = trimmed.indexOf('=');
+          if (eqIdx !== -1) {
+            const key = trimmed.slice(0, eqIdx).trim();
+            const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
+            if (!process.env[key]) {
+              process.env[key] = val;
+            }
+          }
+        }
+      });
+    }
+  } catch {}
+};
+
+loadEnvFromDisk();
 
 let cachedTransporter = null;
 let isRealTransporter = false;
@@ -6,8 +39,12 @@ let isRealTransporter = false;
 export const getMailTransporter = async () => {
   if (cachedTransporter) return { transporter: cachedTransporter, isReal: isRealTransporter };
 
-  const user = process.env.SMTP_USER || process.env.GMAIL_USER;
-  const pass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASS;
+  loadEnvFromDisk();
+
+  const user = (process.env.SMTP_USER || process.env.GMAIL_USER || '').trim();
+  const rawPass = (process.env.SMTP_PASS || process.env.GMAIL_APP_PASS || '').trim();
+  // Strip spaces if user provided a 16-character Google App Password with spaces (e.g. "abcd efgh ijkl mnop")
+  const pass = rawPass.replace(/\s+/g, '');
 
   // 1. Production / Custom Gmail or SMTP configuration
   if (user && pass) {
@@ -31,7 +68,7 @@ export const getMailTransporter = async () => {
     return { transporter: cachedTransporter, isReal: true };
   }
 
-  // 2. Fallback to Ethereal ephemeral test account for dev/testing
+  // 2. Fallback to Ethereal ephemeral test account for dev/testing when no real credentials provided
   try {
     const testAccount = await nodemailer.createTestAccount();
     cachedTransporter = nodemailer.createTransport({
@@ -51,6 +88,24 @@ export const getMailTransporter = async () => {
   }
 };
 
+export const verifyEmailService = async () => {
+  const { transporter, isReal } = await getMailTransporter();
+  if (!transporter) {
+    return { success: false, isReal: false, message: 'No email transporter available.' };
+  }
+  try {
+    await transporter.verify();
+    return { 
+      success: true, 
+      isReal, 
+      user: process.env.SMTP_USER || process.env.GMAIL_USER || 'test account',
+      message: isReal ? 'Real Gmail SMTP connected & verified successfully!' : 'Ethereal dev preview active.'
+    };
+  } catch (err) {
+    return { success: false, isReal, message: err.message };
+  }
+};
+
 export const sendRequestMatchEmail = async ({ requester_email, requester_name, item_name, listing, originUrl }) => {
   if (!requester_email || !listing || !listing.title) {
     throw new Error('Missing required parameters for email notification.');
@@ -60,41 +115,45 @@ export const sendRequestMatchEmail = async ({ requester_email, requester_name, i
   const textContent = `Hi ${requester_name || 'Student'},\n\nYou recently requested "${item_name}" on notoLX.\n\nA fellow student just uploaded a matching item for sale:\n- Item: ${listing.title}\n- Price: ₹${listing.price}\n- Campus Location: ${listing.campus_location || 'Campus'}\n\nKindly check it out on notoLX (Campus Second-Hand Marketplace) before it gets reserved!\n\nBest regards,\nnotoLX Team @ Thapar Institute`;
 
   const htmlContent = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background-color: #0f172a; border-radius: 12px; color: #f8fafc; border: 1px solid #1e293b;">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <h2 style="color: #10b981; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">🎒 notoLX</h2>
-        <p style="color: #94a3b8; font-size: 13px; margin: 6px 0 0 0; font-weight: 500;">Campus Peer-to-Peer Marketplace • Thapar University (@thapar.edu)</p>
-      </div>
-
-      <div style="background-color: #1e293b; padding: 24px; border-radius: 10px; border: 1px solid #334155;">
-        <h3 style="color: #ffffff; margin-top: 0; font-size: 19px;">Great news, ${requester_name || 'fellow student'}! 🎉</h3>
-        <p style="color: #cbd5e1; font-size: 15px; line-height: 1.6;">
-          You previously created a campus request for <strong style="color: #f1f5f9;">"${item_name}"</strong>.
-        </p>
-        <p style="color: #cbd5e1; font-size: 15px; line-height: 1.6;">
-          A student has just listed a matching item on the marketplace:
-        </p>
-
-        <div style="background-color: #0f172a; padding: 18px; border-radius: 8px; margin: 18px 0; border: 1px solid #334155;">
-          <div style="font-size: 18px; font-weight: bold; color: #ffffff;">${listing.title}</div>
-          <div style="font-size: 18px; font-weight: 800; color: #10b981; margin-top: 6px;">₹${listing.price}</div>
-          <div style="font-size: 13px; color: #94a3b8; margin-top: 6px;">📍 Campus Pickup: <strong style="color: #e2e8f0;">${listing.campus_location || 'Campus Quad'}</strong></div>
-          ${listing.condition ? `<div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">Condition: <strong style="color: #e2e8f0;">${listing.condition}</strong></div>` : ''}
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 580px; margin: 0 auto; padding: 24px 16px; background-color: #F3E6DD;">
+      <div style="background-color: #FFFFFF; border-radius: 14px; overflow: hidden; border: 1px solid #D8CCC0; box-shadow: 0 4px 18px rgba(34, 22, 22, 0.08);">
+        
+        <!-- Header -->
+        <div style="background-color: #5E2424; padding: 24px; text-align: center;">
+          <h1 style="color: #FFFFFF; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">🎒 notoLX</h1>
+          <p style="color: #EBDDCE; font-size: 13px; margin: 6px 0 0 0; font-weight: 500;">Thapar Institute of Engineering & Technology • @thapar.edu</p>
         </div>
 
-        <p style="color: #cbd5e1; font-size: 14px; margin-top: 20px;">
-          Log into <strong>notoLX</strong> to chat with the seller and reserve it before someone else does!
-        </p>
+        <!-- Body -->
+        <div style="padding: 28px 24px;">
+          <h2 style="color: #221616; margin-top: 0; font-size: 18px; font-weight: 700;">Great news, ${requester_name || 'fellow student'}! 🎉</h2>
+          <p style="color: #5C4A4A; font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;">
+            You posted a campus request for <strong style="color: #221616;">"${item_name}"</strong>. A fellow student just listed a matching item on <strong>notoLX</strong>:
+          </p>
 
-        <div style="text-align: center; margin: 28px 0 12px 0;">
-          <a href="${originUrl || 'http://localhost:5173'}" style="background-color: #10b981; color: #ffffff; padding: 13px 28px; text-decoration: none; border-radius: 8px; font-weight: 800; font-size: 14px; display: inline-block;">
-            Open notoLX & View Listing →
-          </a>
+          <!-- Listing Card -->
+          <div style="background-color: #FAF4ED; border: 1px solid #D8CCC0; border-radius: 10px; padding: 18px; margin: 20px 0;">
+            <div style="font-size: 17px; font-weight: 800; color: #221616;">${listing.title}</div>
+            <div style="font-size: 20px; font-weight: 800; color: #5E2424; margin-top: 6px;">₹${listing.price}</div>
+            <div style="font-size: 13px; color: #5C4A4A; margin-top: 8px;">📍 Campus Pickup: <strong style="color: #221616;">${listing.campus_location || 'Campus Quad'}</strong></div>
+            ${listing.condition ? `<div style="font-size: 13px; color: #5C4A4A; margin-top: 4px;">Condition: <strong style="color: #221616;">${listing.condition}</strong></div>` : ''}
+          </div>
+
+          <p style="color: #5C4A4A; font-size: 14px; line-height: 1.5; margin: 0 0 24px 0;">
+            Log into <strong>notoLX</strong> to start a direct campus chat with the seller and reserve it before someone else does!
+          </p>
+
+          <div style="text-align: center; margin: 24px 0 8px 0;">
+            <a href="${originUrl || 'https://notolx.thapar.edu'}" style="background-color: #5E2424; color: #FFFFFF; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 14px; display: inline-block; letter-spacing: 0.2px;">
+              Open notoLX & View Listing →
+            </a>
+          </div>
         </div>
-      </div>
 
-      <div style="text-align: center; margin-top: 20px; color: #64748b; font-size: 12px;">
-        This automated notification was sent because you have an active campus request on notoLX (@thapar.edu).
+        <!-- Footer -->
+        <div style="background-color: #FAF4ED; border-top: 1px solid #D8CCC0; padding: 16px 20px; text-align: center; font-size: 12px; color: #7E6C6C;">
+          This automated campus alert was sent to <strong style="color: #221616;">${requester_email}</strong> because of an active item request on notoLX.
+        </div>
       </div>
     </div>
   `;
@@ -103,9 +162,8 @@ export const sendRequestMatchEmail = async ({ requester_email, requester_name, i
   let previewUrl = null;
 
   if (transporter) {
-    const fromAddress = (process.env.SMTP_USER || process.env.GMAIL_USER)
-      ? `"notoLX Campus Marketplace" <${process.env.SMTP_USER || process.env.GMAIL_USER}>` 
-      : '"notoLX Campus Marketplace" <no-reply@notolx.thapar.edu>';
+    const senderEmail = process.env.SMTP_USER || process.env.GMAIL_USER || 'noreply.notolx@gmail.com';
+    const fromAddress = `"notoLX Campus Marketplace" <${senderEmail}>`;
 
     const info = await transporter.sendMail({
       from: fromAddress,
@@ -119,7 +177,7 @@ export const sendRequestMatchEmail = async ({ requester_email, requester_name, i
       previewUrl = nodemailer.getTestMessageUrl(info);
     }
 
-    console.log(`📧 [EMAIL ${isReal ? 'DELIVERED TO INBOX' : 'TEST PREVIEW'}] To: ${requester_email} | Subject: ${subject}`);
+    console.log(`📧 [EMAIL ${isReal ? 'DELIVERED TO REAL INBOX' : 'TEST PREVIEW'}] To: ${requester_email} | Subject: ${subject}`);
     if (previewUrl) {
       console.log(`🔗 [EMAIL PREVIEW URL]: ${previewUrl}`);
     }

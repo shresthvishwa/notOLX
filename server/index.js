@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import nodemailer from 'nodemailer';
-import { sendRequestMatchEmail } from './emailService.js';
+import { sendRequestMatchEmail, verifyEmailService } from './emailService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -363,6 +363,16 @@ app.post('/api/notify-request-match', async (req, res) => {
   } catch (err) {
     console.error('Error dispatching email notification:', err);
     res.status(500).json({ error: 'Failed to send notification email', details: err.message });
+  }
+});
+
+// Test / Verify Email Service Status
+app.get('/api/test-email', async (req, res) => {
+  try {
+    const status = await verifyEmailService();
+    res.json(status);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
